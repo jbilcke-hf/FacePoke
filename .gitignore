@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+**/*.py[cod]
+*$py.class
+
+# Model weights
+**/*.pth
+**/*.onnx
+
+# Ipython notebook
+*.ipynb
+
+# Temporary files or benchmark resources
+animations/*
+tmp/*
+
+# more ignores
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.pyc
+.ipynb_checkpoints
+results/
+data/audio/*.wav
+data/video/*.mp4
+ffmpeg-7.0-amd64-static
+venv/
+.cog/
