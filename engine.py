@@ -265,16 +265,3 @@ class Engine:
         x_d_new[0, 11, 1] -= params.get('pupil_y', 0) * 0.001
         x_d_new[0, 15, 1] -= params.get('pupil_y', 0) * 0.001
         params['eyes'] = params.get('eyes', 0) - params.get('pupil_y', 0) / 2.
-
-def create_engine(models):
-    logger.info("Creating Engine instance...")
-
-    live_portrait = models
-
-    engine = Engine(
-        live_portrait=live_portrait,
-        # we might have more in the future
-    )
-
-    logger.info("Engine instance created successfully")
-    return engine
