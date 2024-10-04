@@ -7,19 +7,16 @@ Date: September 30, 2024
 
 import sys
 import asyncio
-import hashlib
 from aiohttp import web, WSMsgType
 import json
 import uuid
 import logging
 import os
-import zipfile
 import signal
 from typing import Dict, Any, List, Optional
 import base64
 import io
 from PIL import Image
-import numpy as np
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -58,8 +55,6 @@ async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
     """
     ws = web.WebSocketResponse()
     await ws.prepare(request)
-
-    session: Optional[FacePokeSession] = None
     try:
         logger.info("New WebSocket connection established")
 
@@ -87,11 +82,6 @@ async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
     except Exception as e:
         logger.error(f"Error in websocket_handler: {str(e)}")
         logger.exception("Full traceback:")
-    finally:
-        if session:
-            await session.stop()
-            del active_sessions[session.session_id]
-        logger.info("WebSocket connection closed")
     return ws
 
 async def handle_modify_image(request: web.Request, ws: web.WebSocketResponse, msg: Dict[str, Any], uuid: str):
@@ -152,10 +142,6 @@ async def hf_logo(request: web.Request) -> web.Response:
 async def on_shutdown(app: web.Application):
     """Cleanup function to be called on server shutdown."""
     logger.info("Server shutdown initiated, cleaning up resources...")
-    for session in list(active_sessions.values()):
-        await session.stop()
-    active_sessions.clear()
-    logger.info("All active sessions have been closed")
 
     if 'engine' in app:
         await app['engine'].cleanup()
@@ -191,74 +177,12 @@ async def initialize_app() -> web.Application:
         logger.exception("Full traceback:")
         raise
 
-async def start_background_tasks(app: web.Application):
-    """
-    Start background tasks for the application.
-
-    Args:
-        app (web.Application): The web application instance.
-    """
-    app['cleanup_task'] = asyncio.create_task(periodic_cleanup(app))
-
-async def cleanup_background_tasks(app: web.Application):
-    """
-    Clean up background tasks when the application is shutting down.
-
-    Args:
-        app (web.Application): The web application instance.
-    """
-    app['cleanup_task'].cancel()
-    await app['cleanup_task']
-
-async def periodic_cleanup(app: web.Application):
-    """
-    Perform periodic cleanup tasks for the application.
-
-    Args:
-        app (web.Application): The web application instance.
-    """
-    while True:
-        try:
-            await asyncio.sleep(3600)  # Run cleanup every hour
-            await cleanup_inactive_sessions(app)
-        except asyncio.CancelledError:
-            break
-        except Exception as e:
-            logger.error(f"Error in periodic cleanup: {str(e)}")
-            logger.exception("Full traceback:")
-
-async def cleanup_inactive_sessions(app: web.Application):
-    """
-    Clean up inactive sessions.
-
-    Args:
-        app (web.Application): The web application instance.
-    """
-    logger.info("Starting cleanup of inactive sessions")
-    inactive_sessions = [
-        session_id for session_id, session in active_sessions.items()
-        if not session.is_running.is_set()
-    ]
-    for session_id in inactive_sessions:
-        session = active_sessions.pop(session_id)
-        await session.stop()
-        logger.info(f"Cleaned up inactive session: {session_id}")
-    logger.info(f"Cleaned up {len(inactive_sessions)} inactive sessions")
-
-def main():
-    """
-    Main function to start the FacePoke application.
-    """
+if __name__ == "__main__":
     try:
         logger.info("Starting FacePoke application")
         app = asyncio.run(initialize_app())
-        app.on_startup.append(start_background_tasks)
-        app.on_cleanup.append(cleanup_background_tasks)
         logger.info("Application initialized, starting web server")
         web.run_app(app, host="0.0.0.0", port=8080)
     except Exception as e:
         logger.critical(f"🚨 FATAL: Failed to start the app: {str(e)}")
         logger.exception("Full traceback:")
-
-if __name__ == "__main__":
-    main()
