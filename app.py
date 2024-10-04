@@ -35,7 +35,7 @@ def SIGSEGV_signal_arises(signalNum, stack):
 signal.signal(signal.SIGSEGV, SIGSEGV_signal_arises)
 
 from loader import initialize_models
-from engine import Engine, base64_data_uri_to_PIL_Image, create_engine
+from engine import Engine, base64_data_uri_to_PIL_Image
 
 # Global constants
 DATA_ROOT = os.environ.get('DATA_ROOT', '/tmp/data')
@@ -143,9 +143,10 @@ async def initialize_app() -> web.Application:
     """Initialize and configure the web application."""
     try:
         logger.info("Initializing application...")
-        models = await initialize_models()
+        live_portrait = await initialize_models()
+
         logger.info("🚀 Creating Engine instance...")
-        engine = create_engine(models)
+        engine = Engine(live_portrait=live_portrait)
         logger.info("✅ Engine instance created.")
 
         app = web.Application()
