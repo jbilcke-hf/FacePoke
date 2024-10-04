@@ -29858,25 +29858,6 @@ class FacePoke {
     console.error(`[FacePoke][${this.connectionId}] WebSocket error:`, error);
     this.emitEvent("websocketError", error);
   }
-  handleInterruption(message) {
-    console.warn(`[FacePoke] Interruption: ${message}`);
-    this.emitEvent("interruption", message);
-  }
-  async toggleMicrophone(isOn) {
-    console.log(`[FacePoke] Attempting to ${isOn ? "start" : "stop"} microphone`);
-    try {
-      if (isOn) {
-        await this.startMicrophone();
-      } else {
-        this.stopMicrophone();
-      }
-      this.emitEvent("microphoneToggled", isOn);
-    } catch (error) {
-      console.error(`[FacePoke] Error toggling microphone:`, error);
-      this.emitEvent("microphoneError", error);
-      throw error;
-    }
-  }
   cleanup() {
     console.log("[FacePoke] Starting cleanup process");
     if (this.ws) {

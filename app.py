@@ -139,16 +139,6 @@ async def hf_logo(request: web.Request) -> web.Response:
     content = open(os.path.join(os.path.dirname(__file__), "public", "hf-logo.svg"), "r").read()
     return web.Response(content_type="image/svg+xml", text=content)
 
-async def on_shutdown(app: web.Application):
-    """Cleanup function to be called on server shutdown."""
-    logger.info("Server shutdown initiated, cleaning up resources...")
-
-    if 'engine' in app:
-        await app['engine'].cleanup()
-        logger.info("Engine instance cleaned up")
-
-    logger.info("Server shutdown complete")
-
 async def initialize_app() -> web.Application:
     """Initialize and configure the web application."""
     try:
@@ -160,8 +150,6 @@ async def initialize_app() -> web.Application:
 
         app = web.Application()
         app['engine'] = engine
-
-        app.on_shutdown.append(on_shutdown)
 
         # Configure routes
         app.router.add_get("/", index)

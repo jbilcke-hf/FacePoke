@@ -1,26 +1,20 @@
-import time
 import logging
 import hashlib
-import uuid
 import os
 import io
-import shutil
 import asyncio
 import base64
-from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import Dict, Any, List, Optional, AsyncGenerator, Tuple, Union
+from typing import Dict, Any, List, Optional, Union
 from functools import lru_cache
-import av
 import numpy as np
-import cv2
 import torch
 import torch.nn.functional as F
 from PIL import Image
 
 from liveportrait.config.argument_config import ArgumentConfig
 from liveportrait.utils.camera import get_rotation_matrix
-from liveportrait.utils.io import load_image_rgb, load_driving_info, resize_to_limit
+from liveportrait.utils.io import resize_to_limit
 from liveportrait.utils.crop import prepare_paste_back, paste_back
 
 # Configure logging
@@ -62,7 +56,6 @@ class Engine:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # cache for the "modify image" workflow
         self.image_cache = {}  # Stores the original images
         self.processed_cache = {}  # Stores the processed image data
 
@@ -272,19 +265,6 @@ class Engine:
         x_d_new[0, 11, 1] -= params.get('pupil_y', 0) * 0.001
         x_d_new[0, 15, 1] -= params.get('pupil_y', 0) * 0.001
         params['eyes'] = params.get('eyes', 0) - params.get('pupil_y', 0) / 2.
-
-    async def cleanup(self):
-        """
-        Perform cleanup operations for the Engine.
-        This method should be called when shutting down the application.
-        """
-        logger.info("Starting Engine cleanup")
-        try:
-            # TODO: Add any additional cleanup operations here
-            logger.info("Engine cleanup completed successfully")
-        except Exception as e:
-            logger.error(f"Error during Engine cleanup: {str(e)}")
-            logger.exception("Full traceback:")
 
 def create_engine(models):
     logger.info("Creating Engine instance...")

@@ -248,48 +248,18 @@ export class FacePoke {
   }
 
   /**
-   * Handles interruption messages from the server.
-   * @param message - The interruption message.
+   * Cleans up resources and closes connections.
    */
-  private handleInterruption(message: string): void {
-    console.warn(`[FacePoke] Interruption: ${message}`);
-    this.emitEvent('interruption', message);
-  }
-
-  /**
-   * Toggles the microphone on or off.
-   * @param isOn - Whether to turn the microphone on (true) or off (false).
-   */
-  public async toggleMicrophone(isOn: boolean): Promise<void> {
-    console.log(`[FacePoke] Attempting to ${isOn ? 'start' : 'stop'} microphone`);
-    try {
-      if (isOn) {
-        await this.startMicrophone();
-      } else {
-        this.stopMicrophone();
-      }
-      this.emitEvent('microphoneToggled', isOn);
-    } catch (error) {
-      console.error(`[FacePoke] Error toggling microphone:`, error);
-      this.emitEvent('microphoneError', error);
-      throw error;
+  public cleanup(): void {
+    console.log('[FacePoke] Starting cleanup process');
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
     }
+    this.eventListeners.clear();
+    console.log('[FacePoke] Cleanup completed');
+    this.emitEvent('cleanup');
   }
-
-
-/**
- * Cleans up resources and closes connections.
- */
-public cleanup(): void {
-  console.log('[FacePoke] Starting cleanup process');
-  if (this.ws) {
-    this.ws.close();
-    this.ws = null;
-  }
-  this.eventListeners.clear();
-  console.log('[FacePoke] Cleanup completed');
-  this.emitEvent('cleanup');
-}
 
   /**
    * Modifies an image based on the provided parameters
