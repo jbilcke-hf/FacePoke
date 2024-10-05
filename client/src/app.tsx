@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { truncateFileName } from './lib/utils';
 import { useFaceLandmarkDetection } from './hooks/useFaceLandmarkDetection';
 import { PoweredBy } from './components/PoweredBy';
 import { Spinner } from './components/Spinner';
-import { DoubleCard } from './components/DoubleCard';
 import { useFacePokeAPI } from './hooks/useFacePokeAPI';
 import { Layout } from './layout';
 import { useMainStore } from './hooks/useMainStore';
@@ -22,6 +21,7 @@ export function App() {
   const previewImage = useMainStore(s => s.previewImage);
   const setPreviewImage = useMainStore(s => s.setPreviewImage);
   const resetImage = useMainStore(s => s.resetImage);
+  const setOriginalImageHash = useMainStore(s => s.setOriginalImageHash);
 
   const {
     status,
@@ -65,12 +65,14 @@ export function App() {
         const image = await convertImageToBase64(files[0]);
         setPreviewImage(image);
         setOriginalImage(image);
+        setOriginalImageHash('');
       } catch (err) {
         console.log(`failed to convert the image: `, err);
         setImageFile(null);
         setStatus('');
         setPreviewImage('');
         setOriginalImage('');
+        setOriginalImageHash('');
         setFaceLandmarks([]);
         setBlendShapes([]);
       }
@@ -79,10 +81,22 @@ export function App() {
       setStatus('');
       setPreviewImage('');
       setOriginalImage('');
+      setOriginalImageHash('');
       setFaceLandmarks([]);
       setBlendShapes([]);
     }
-  }, [isMediaPipeReady, setImageFile, setPreviewImage, setOriginalImage, setFaceLandmarks, setBlendShapes, setStatus]);
+  }, [isMediaPipeReady, setImageFile, setPreviewImage, setOriginalImage, setOriginalImageHash, setFaceLandmarks, setBlendShapes, setStatus]);
+
+  const handleDownload = useCallback(() => {
+    if (previewImage) {
+      const link = document.createElement('a');
+      link.href = previewImage;
+      link.download = 'modified_image.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, [previewImage]);
 
   const canDisplayBlendShapes = false
 
@@ -124,24 +138,35 @@ export function App() {
         )}
         <div className="mb-5 relative">
           <div className="flex flex-row items-center justify-between w-full">
-            <div className="relative">
-              <input
-                id="imageInput"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                disabled={!isMediaPipeReady}
-              />
-              <label
-                htmlFor="imageInput"
-                className={`cursor-pointer inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white ${
-                  isMediaPipeReady ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-500 cursor-not-allowed'
-                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-xl`}
-              >
-                <Spinner />
-                {imageFile ? truncateFileName(imageFile.name, 32) : (isMediaPipeReady ? 'Choose an image' : 'Initializing...')}
-              </label>
+            <div className="flex items-center space-x-2">
+              <div className="relative">
+                <input
+                  id="imageInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={!isMediaPipeReady}
+                />
+                <label
+                  htmlFor="imageInput"
+                  className={`cursor-pointer inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white ${
+                    isMediaPipeReady ? 'bg-slate-600 hover:bg-slate-500' : 'bg-slate-500 cursor-not-allowed'
+                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`}
+                >
+                  <Spinner />
+                  {imageFile ? truncateFileName(imageFile.name, 32) : (isMediaPipeReady ? 'Choose a portrait photo (.jpg, .png, .webp)' : 'Initializing...')}
+                </label>
+              </div>
+              {previewImage && (
+                <button
+                  onClick={handleDownload}
+                  className="inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </button>
+              )}
             </div>
             {previewImage && <label className="mt-4 flex items-center">
               <input
@@ -177,14 +202,12 @@ export function App() {
                   opacity: isDebugMode ? currentOpacity : 0.0,
                   transition: 'opacity 0.2s ease-in-out'
                 }}
-
               />
             </div>
           )}
           {canDisplayBlendShapes && displayBlendShapes}
         </div>
         <PoweredBy />
-
     </Layout>
   );
 }

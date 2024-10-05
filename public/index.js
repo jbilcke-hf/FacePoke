@@ -23683,8 +23683,77 @@ var require_lodash = __commonJS((exports, module) => {
 var client = __toESM(require_client(), 1);
 
 // src/app.tsx
-var import_react7 = __toESM(require_react(), 1);
+var import_react9 = __toESM(require_react(), 1);
 
+// node_modules/lucide-react/dist/esm/createLucideIcon.js
+var import_react2 = __toESM(require_react(), 1);
+
+// node_modules/lucide-react/dist/esm/shared/src/utils.js
+var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+var mergeClasses = (...classes) => classes.filter((className, index, array) => {
+  return Boolean(className) && array.indexOf(className) === index;
+}).join(" ");
+
+// node_modules/lucide-react/dist/esm/Icon.js
+var import_react = __toESM(require_react(), 1);
+
+// node_modules/lucide-react/dist/esm/defaultAttributes.js
+var defaultAttributes = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: 24,
+  height: 24,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+};
+
+// node_modules/lucide-react/dist/esm/Icon.js
+var Icon = import_react.forwardRef(({
+  color = "currentColor",
+  size = 24,
+  strokeWidth = 2,
+  absoluteStrokeWidth,
+  className = "",
+  children,
+  iconNode,
+  ...rest
+}, ref) => {
+  return import_react.createElement("svg", {
+    ref,
+    ...defaultAttributes,
+    width: size,
+    height: size,
+    stroke: color,
+    strokeWidth: absoluteStrokeWidth ? Number(strokeWidth) * 24 / Number(size) : strokeWidth,
+    className: mergeClasses("lucide", className),
+    ...rest
+  }, [
+    ...iconNode.map(([tag, attrs]) => import_react.createElement(tag, attrs)),
+    ...Array.isArray(children) ? children : [children]
+  ]);
+});
+
+// node_modules/lucide-react/dist/esm/createLucideIcon.js
+var createLucideIcon = (iconName, iconNode) => {
+  const Component = import_react2.forwardRef(({ className, ...props }, ref) => import_react2.createElement(Icon, {
+    ref,
+    iconNode,
+    className: mergeClasses(`lucide-${toKebabCase(iconName)}`, className),
+    ...props
+  }));
+  Component.displayName = `${iconName}`;
+  return Component;
+};
+
+// node_modules/lucide-react/dist/esm/icons/download.js
+var Download = createLucideIcon("Download", [
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["polyline", { points: "7 10 12 15 17 10", key: "2ggqvy" }],
+  ["line", { x1: "12", x2: "12", y1: "15", y2: "3", key: "1vk2je" }]
+]);
 // src/components/ui/alert.tsx
 var React = __toESM(require_react(), 1);
 
@@ -25133,7 +25202,7 @@ var AlertDescription = React.forwardRef(({ className, ...props }, ref) => jsx_de
 AlertDescription.displayName = "AlertDescription";
 
 // src/hooks/useFaceLandmarkDetection.tsx
-var import_react5 = __toESM(require_react(), 1);
+var import_react7 = __toESM(require_react(), 1);
 
 // node_modules/@mediapipe/tasks-vision/vision_bundle.mjs
 var exports_vision_bundle = {};
@@ -29683,10 +29752,10 @@ var createStoreImpl = (createState) => {
 var createStore = (createState) => createState ? createStoreImpl(createState) : createStoreImpl;
 
 // node_modules/zustand/esm/react.mjs
-var import_react = __toESM(require_react(), 1);
+var import_react3 = __toESM(require_react(), 1);
 var useStore = function(api, selector = identity) {
-  const slice = import_react.default.useSyncExternalStore(api.subscribe, () => selector(api.getState()), () => selector(api.getInitialState()));
-  import_react.default.useDebugValue(slice);
+  const slice = import_react3.default.useSyncExternalStore(api.subscribe, () => selector(api.getState()), () => selector(api.getInitialState()));
+  import_react3.default.useDebugValue(slice);
   return slice;
 };
 var identity = (arg) => arg;
@@ -29932,21 +30001,21 @@ class FacePoke {
 var facePoke = new FacePoke;
 
 // node_modules/beautiful-react-hooks/esm/useThrottledCallback.js
-var import_react4 = __toESM(require_react(), 1);
+var import_react6 = __toESM(require_react(), 1);
 var import_lodash = __toESM(require_lodash(), 1);
 
 // node_modules/beautiful-react-hooks/esm/useWillUnmount.js
-var import_react3 = __toESM(require_react(), 1);
+var import_react5 = __toESM(require_react(), 1);
 
 // node_modules/beautiful-react-hooks/esm/shared/isFunction.js
 var isFunction = (functionToCheck) => typeof functionToCheck === "function" && !!functionToCheck.constructor && !!functionToCheck.call && !!functionToCheck.apply;
 var isFunction_default = isFunction;
 
 // node_modules/beautiful-react-hooks/esm/factory/createHandlerSetter.js
-var import_react2 = __toESM(require_react(), 1);
+var import_react4 = __toESM(require_react(), 1);
 var createHandlerSetter = (callback) => {
-  const handlerRef = import_react2.useRef(callback);
-  const setHandler = import_react2.useRef((nextCallback) => {
+  const handlerRef = import_react4.useRef(callback);
+  const setHandler = import_react4.useRef((nextCallback) => {
     if (typeof nextCallback !== "function") {
       throw new Error("the argument supplied to the \'setHandler\' function should be of type function");
     }
@@ -29958,9 +30027,9 @@ var createHandlerSetter_default = createHandlerSetter;
 
 // node_modules/beautiful-react-hooks/esm/useWillUnmount.js
 var useWillUnmount = (callback) => {
-  const mountRef = import_react3.useRef(false);
+  const mountRef = import_react5.useRef(false);
   const [handler, setHandler] = createHandlerSetter_default(callback);
-  import_react3.useLayoutEffect(() => {
+  import_react5.useLayoutEffect(() => {
     mountRef.current = true;
     return () => {
       if (isFunction_default(handler === null || handler === undefined ? undefined : handler.current) && mountRef.current) {
@@ -29978,15 +30047,15 @@ var defaultOptions = {
   trailing: true
 };
 var useThrottledCallback = (fn2, dependencies, wait = 600, options = defaultOptions) => {
-  const throttled = import_react4.useRef(import_lodash.default(fn2, wait, options));
-  import_react4.useEffect(() => {
+  const throttled = import_react6.useRef(import_lodash.default(fn2, wait, options));
+  import_react6.useEffect(() => {
     throttled.current = import_lodash.default(fn2, wait, options);
   }, [fn2, wait, options]);
   useWillUnmount_default(() => {
     var _a2;
     (_a2 = throttled.current) === null || _a2 === undefined || _a2.cancel();
   });
-  return import_react4.useCallback(throttled.current, dependencies !== null && dependencies !== undefined ? dependencies : []);
+  return import_react6.useCallback(throttled.current, dependencies !== null && dependencies !== undefined ? dependencies : []);
 };
 var useThrottledCallback_default = useThrottledCallback;
 
@@ -32761,34 +32830,34 @@ function useFaceLandmarkDetection() {
   const resetImage = useMainStore((s2) => s2.resetImage);
   window.debugJuju = useMainStore;
   const averageLatency = 220;
-  const [faceLandmarks, setFaceLandmarks] = import_react5.useState([]);
-  const [isMediaPipeReady, setIsMediaPipeReady] = import_react5.useState(false);
-  const [isDrawingUtilsReady, setIsDrawingUtilsReady] = import_react5.useState(false);
-  const [blendShapes, setBlendShapes] = import_react5.useState([]);
-  const [dragStart, setDragStart] = import_react5.useState(null);
-  const [dragEnd, setDragEnd] = import_react5.useState(null);
-  const [isDragging, setIsDragging] = import_react5.useState(false);
-  const [isWaitingForResponse, setIsWaitingForResponse] = import_react5.useState(false);
-  const dragStartRef = import_react5.useRef(null);
-  const currentMousePosRef = import_react5.useRef(null);
-  const lastModifiedImageHashRef = import_react5.useRef(null);
-  const [currentLandmark, setCurrentLandmark] = import_react5.useState(null);
-  const [previousLandmark, setPreviousLandmark] = import_react5.useState(null);
-  const [currentOpacity, setCurrentOpacity] = import_react5.useState(0);
-  const [previousOpacity, setPreviousOpacity] = import_react5.useState(0);
-  const [isHovering, setIsHovering] = import_react5.useState(false);
-  const canvasRef = import_react5.useRef(null);
-  const mediaPipeRef = import_react5.useRef({
+  const [faceLandmarks, setFaceLandmarks] = import_react7.useState([]);
+  const [isMediaPipeReady, setIsMediaPipeReady] = import_react7.useState(false);
+  const [isDrawingUtilsReady, setIsDrawingUtilsReady] = import_react7.useState(false);
+  const [blendShapes, setBlendShapes] = import_react7.useState([]);
+  const [dragStart, setDragStart] = import_react7.useState(null);
+  const [dragEnd, setDragEnd] = import_react7.useState(null);
+  const [isDragging, setIsDragging] = import_react7.useState(false);
+  const [isWaitingForResponse, setIsWaitingForResponse] = import_react7.useState(false);
+  const dragStartRef = import_react7.useRef(null);
+  const currentMousePosRef = import_react7.useRef(null);
+  const lastModifiedImageHashRef = import_react7.useRef(null);
+  const [currentLandmark, setCurrentLandmark] = import_react7.useState(null);
+  const [previousLandmark, setPreviousLandmark] = import_react7.useState(null);
+  const [currentOpacity, setCurrentOpacity] = import_react7.useState(0);
+  const [previousOpacity, setPreviousOpacity] = import_react7.useState(0);
+  const [isHovering, setIsHovering] = import_react7.useState(false);
+  const canvasRef = import_react7.useRef(null);
+  const mediaPipeRef = import_react7.useRef({
     faceLandmarker: null,
     drawingUtils: null
   });
-  const setActiveLandmark = import_react5.useCallback((newLandmark) => {
+  const setActiveLandmark = import_react7.useCallback((newLandmark) => {
     setPreviousLandmark(currentLandmark || null);
     setCurrentLandmark(newLandmark || null);
     setCurrentOpacity(0);
     setPreviousOpacity(1);
   }, [currentLandmark, setPreviousLandmark, setCurrentLandmark, setCurrentOpacity, setPreviousOpacity]);
-  import_react5.useEffect(() => {
+  import_react7.useEffect(() => {
     console.log("Initializing MediaPipe...");
     let isMounted = true;
     const initializeMediaPipe = async () => {
@@ -32826,8 +32895,8 @@ function useFaceLandmarkDetection() {
       }
     };
   }, []);
-  const [landmarkCenters, setLandmarkCenters] = import_react5.useState({});
-  const computeLandmarkCenters = import_react5.useCallback((landmarks2) => {
+  const [landmarkCenters, setLandmarkCenters] = import_react7.useState({});
+  const computeLandmarkCenters = import_react7.useCallback((landmarks2) => {
     const centers = {};
     const computeGroupCenter = (group) => {
       let sumX = 0, sumY = 0, sumZ = 0, count = 0;
@@ -32850,7 +32919,7 @@ function useFaceLandmarkDetection() {
     centers.background = { x: 0.5, y: 0.5, z: 0 };
     setLandmarkCenters(centers);
   }, []);
-  const findClosestLandmark = import_react5.useCallback((mouseX, mouseY, isGroup) => {
+  const findClosestLandmark = import_react7.useCallback((mouseX, mouseY, isGroup) => {
     const defaultLandmark = {
       group: "background",
       distance: 0,
@@ -32899,7 +32968,7 @@ function useFaceLandmarkDetection() {
       return defaultLandmark;
     }
   }, [landmarkCenters]);
-  const detectFaceLandmarks = import_react5.useCallback(async (imageDataUrl) => {
+  const detectFaceLandmarks = import_react7.useCallback(async (imageDataUrl) => {
     if (!isMediaPipeReady) {
       console.log("MediaPipe not ready. Skipping detection.");
       return;
@@ -32925,7 +32994,7 @@ function useFaceLandmarkDetection() {
       drawLandmarks(faceLandmarkerResult.faceLandmarks[0], canvasRef.current, drawingUtils);
     }
   }, [isMediaPipeReady, isDrawingUtilsReady, computeLandmarkCenters]);
-  const drawLandmarks = import_react5.useCallback((landmarks2, canvas, drawingUtils) => {
+  const drawLandmarks = import_react7.useCallback((landmarks2, canvas, drawingUtils) => {
     const ctx = canvas.getContext("2d");
     if (!ctx)
       return;
@@ -32951,12 +33020,12 @@ function useFaceLandmarkDetection() {
       img.src = previewImage;
     }
   }, [previewImage, currentLandmark, previousLandmark, currentOpacity, previousOpacity]);
-  import_react5.useEffect(() => {
+  import_react7.useEffect(() => {
     if (isMediaPipeReady && isDrawingUtilsReady && faceLandmarks.length > 0 && canvasRef.current && mediaPipeRef.current.drawingUtils) {
       drawLandmarks(faceLandmarks[0], canvasRef.current, mediaPipeRef.current.drawingUtils);
     }
   }, [isMediaPipeReady, isDrawingUtilsReady, faceLandmarks, currentLandmark, previousLandmark, currentOpacity, previousOpacity, drawLandmarks]);
-  import_react5.useEffect(() => {
+  import_react7.useEffect(() => {
     let animationFrame;
     const animate = () => {
       setCurrentOpacity((prev) => Math.min(prev + 0.2, 1));
@@ -32968,7 +33037,7 @@ function useFaceLandmarkDetection() {
     animationFrame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrame);
   }, [currentLandmark]);
-  const canvasRefCallback = import_react5.useCallback((node) => {
+  const canvasRefCallback = import_react7.useCallback((node) => {
     if (node !== null) {
       const ctx = node.getContext("2d");
       if (ctx) {
@@ -32984,7 +33053,7 @@ function useFaceLandmarkDetection() {
       canvasRef.current = node;
     }
   }, []);
-  import_react5.useEffect(() => {
+  import_react7.useEffect(() => {
     if (!isMediaPipeReady) {
       console.log("MediaPipe not ready. Skipping landmark detection.");
       return;
@@ -32999,7 +33068,7 @@ function useFaceLandmarkDetection() {
     }
     detectFaceLandmarks(previewImage);
   }, [isMediaPipeReady, isDrawingUtilsReady, previewImage]);
-  const modifyImage = import_react5.useCallback(({ landmark, vector }) => {
+  const modifyImage = import_react7.useCallback(({ landmark, vector }) => {
     const {
       originalImage: originalImage2,
       originalImageHash: originalImageHash2,
@@ -33090,13 +33159,13 @@ function useFaceLandmarkDetection() {
   const modifyImageWithRateLimit = useThrottledCallback_default((params) => {
     modifyImage(params);
   }, [modifyImage], averageLatency);
-  const handleMouseEnter = import_react5.useCallback(() => {
+  const handleMouseEnter = import_react7.useCallback(() => {
     setIsHovering(true);
   }, []);
-  const handleMouseLeave = import_react5.useCallback(() => {
+  const handleMouseLeave = import_react7.useCallback(() => {
     setIsHovering(false);
   }, []);
-  const handleMouseDown = import_react5.useCallback((event) => {
+  const handleMouseDown = import_react7.useCallback((event) => {
     if (!canvasRef.current)
       return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -33108,7 +33177,7 @@ function useFaceLandmarkDetection() {
     setDragStart({ x: x2, y: y2 });
     dragStartRef.current = { x: x2, y: y2 };
   }, [findClosestLandmark, setActiveLandmark, setDragStart]);
-  const handleMouseMove = import_react5.useCallback((event) => {
+  const handleMouseMove = import_react7.useCallback((event) => {
     if (!canvasRef.current)
       return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -33134,7 +33203,7 @@ function useFaceLandmarkDetection() {
       setIsHovering(true);
     }
   }, [currentLandmark, dragStart, setIsHovering, setActiveLandmark, setIsDragging, modifyImageWithRateLimit, landmarkCenters]);
-  const handleMouseUp = import_react5.useCallback((event) => {
+  const handleMouseUp = import_react7.useCallback((event) => {
     if (!canvasRef.current)
       return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -33156,7 +33225,7 @@ function useFaceLandmarkDetection() {
     dragStartRef.current = null;
     setActiveLandmark(undefined);
   }, [currentLandmark, isDragging, modifyImageWithRateLimit, findClosestLandmark, setActiveLandmark, landmarkCenters, modifyImageWithRateLimit, setIsDragging]);
-  import_react5.useEffect(() => {
+  import_react7.useEffect(() => {
     facePoke.setOnModifiedImage((image, image_hash) => {
       if (image) {
         setPreviewImage(image);
@@ -33192,7 +33261,7 @@ function PoweredBy() {
     className: "flex flex-row items-center justify-center font-sans mt-4 w-full",
     children: [
       jsx_dev_runtime2.jsxDEV("span", {
-        className: "ml-2 mr-1",
+        className: "mr-1",
         children: jsx_dev_runtime2.jsxDEV("img", {
           src: "/hf-logo.svg",
           alt: "Hugging Face",
@@ -33226,17 +33295,17 @@ function Spinner() {
 }
 
 // src/hooks/useFacePokeAPI.ts
-var import_react6 = __toESM(require_react(), 1);
+var import_react8 = __toESM(require_react(), 1);
 function useFacePokeAPI() {
-  const [status, setStatus] = import_react6.useState("");
-  const [isDebugMode, setIsDebugMode] = import_react6.useState(false);
-  const [interruptMessage, setInterruptMessage] = import_react6.useState(null);
-  const [isLoading, setIsLoading] = import_react6.useState(false);
-  import_react6.useEffect(() => {
+  const [status, setStatus] = import_react8.useState("");
+  const [isDebugMode, setIsDebugMode] = import_react8.useState(false);
+  const [interruptMessage, setInterruptMessage] = import_react8.useState(null);
+  const [isLoading, setIsLoading] = import_react8.useState(false);
+  import_react8.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     setIsDebugMode(urlParams.get("debug") === "true");
   }, []);
-  import_react6.useEffect(() => {
+  import_react8.useEffect(() => {
     const handleInterruption = (event) => {
       setInterruptMessage(event.detail.message);
     };
@@ -33303,6 +33372,7 @@ function App() {
   const previewImage = useMainStore((s2) => s2.previewImage);
   const setPreviewImage = useMainStore((s2) => s2.setPreviewImage);
   const resetImage = useMainStore((s2) => s2.resetImage);
+  const setOriginalImageHash = useMainStore((s2) => s2.setOriginalImageHash);
   const {
     status,
     setStatus,
@@ -33326,8 +33396,8 @@ function App() {
     handleMouseLeave,
     currentOpacity
   } = useFaceLandmarkDetection();
-  const videoRef = import_react7.useRef(null);
-  const handleFileChange = import_react7.useCallback(async (event) => {
+  const videoRef = import_react9.useRef(null);
+  const handleFileChange = import_react9.useCallback(async (event) => {
     const files = event.target.files;
     if (files && files[0]) {
       setImageFile(files[0]);
@@ -33336,12 +33406,14 @@ function App() {
         const image = await convertImageToBase64(files[0]);
         setPreviewImage(image);
         setOriginalImage(image);
+        setOriginalImageHash("");
       } catch (err) {
         console.log(`failed to convert the image: `, err);
         setImageFile(null);
         setStatus("");
         setPreviewImage("");
         setOriginalImage("");
+        setOriginalImageHash("");
         setFaceLandmarks([]);
         setBlendShapes([]);
       }
@@ -33350,12 +33422,23 @@ function App() {
       setStatus("");
       setPreviewImage("");
       setOriginalImage("");
+      setOriginalImageHash("");
       setFaceLandmarks([]);
       setBlendShapes([]);
     }
-  }, [isMediaPipeReady, setImageFile, setPreviewImage, setOriginalImage, setFaceLandmarks, setBlendShapes, setStatus]);
+  }, [isMediaPipeReady, setImageFile, setPreviewImage, setOriginalImage, setOriginalImageHash, setFaceLandmarks, setBlendShapes, setStatus]);
+  const handleDownload = import_react9.useCallback(() => {
+    if (previewImage) {
+      const link = document.createElement("a");
+      link.href = previewImage;
+      link.download = "modified_image.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, [previewImage]);
   const canDisplayBlendShapes = false;
-  const displayBlendShapes = import_react7.useMemo(() => jsx_dev_runtime5.jsxDEV("div", {
+  const displayBlendShapes = import_react9.useMemo(() => jsx_dev_runtime5.jsxDEV("div", {
     className: "mt-4",
     children: [
       jsx_dev_runtime5.jsxDEV("h3", {
@@ -33417,22 +33500,37 @@ function App() {
             className: "flex flex-row items-center justify-between w-full",
             children: [
               jsx_dev_runtime5.jsxDEV("div", {
-                className: "relative",
+                className: "flex items-center space-x-2",
                 children: [
-                  jsx_dev_runtime5.jsxDEV("input", {
-                    id: "imageInput",
-                    type: "file",
-                    accept: "image/*",
-                    onChange: handleFileChange,
-                    className: "hidden",
-                    disabled: !isMediaPipeReady
-                  }, undefined, false, undefined, this),
-                  jsx_dev_runtime5.jsxDEV("label", {
-                    htmlFor: "imageInput",
-                    className: `cursor-pointer inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white ${isMediaPipeReady ? "bg-gray-600 hover:bg-gray-500" : "bg-gray-500 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-xl`,
+                  jsx_dev_runtime5.jsxDEV("div", {
+                    className: "relative",
                     children: [
-                      jsx_dev_runtime5.jsxDEV(Spinner, {}, undefined, false, undefined, this),
-                      imageFile ? truncateFileName(imageFile.name, 32) : isMediaPipeReady ? "Choose an image" : "Initializing..."
+                      jsx_dev_runtime5.jsxDEV("input", {
+                        id: "imageInput",
+                        type: "file",
+                        accept: "image/*",
+                        onChange: handleFileChange,
+                        className: "hidden",
+                        disabled: !isMediaPipeReady
+                      }, undefined, false, undefined, this),
+                      jsx_dev_runtime5.jsxDEV("label", {
+                        htmlFor: "imageInput",
+                        className: `cursor-pointer inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white ${isMediaPipeReady ? "bg-slate-600 hover:bg-slate-500" : "bg-slate-500 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`,
+                        children: [
+                          jsx_dev_runtime5.jsxDEV(Spinner, {}, undefined, false, undefined, this),
+                          imageFile ? truncateFileName(imageFile.name, 32) : isMediaPipeReady ? "Choose a portrait photo (.jpg, .png, .webp)" : "Initializing..."
+                        ]
+                      }, undefined, true, undefined, this)
+                    ]
+                  }, undefined, true, undefined, this),
+                  previewImage && jsx_dev_runtime5.jsxDEV("button", {
+                    onClick: handleDownload,
+                    className: "inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl",
+                    children: [
+                      jsx_dev_runtime5.jsxDEV(Download, {
+                        className: "w-4 h-4 mr-2"
+                      }, undefined, false, undefined, this),
+                      "Download"
                     ]
                   }, undefined, true, undefined, this)
                 ]
