@@ -33042,15 +33042,15 @@ function useFaceLandmarkDetection() {
       case "rightEyebrow":
         const eyebrowMin = -10;
         const eyebrowMax = 15;
-        params.eyebrow = mapRange(vector.y, minY, maxY, eyebrowMin, eyebrowMax);
+        params.eyebrow = mapRange(-vector.y, minY, maxY, eyebrowMin, eyebrowMax);
         break;
       case "lips":
         const eeeMin = -20;
         const eeeMax = 15;
-        params.eee = mapRange(vector.y, minY, maxY, eeeMin, eeeMax);
+        params.eee = mapRange(-vector.y, minY, maxY, eeeMin, eeeMax);
         const wooMin = -20;
         const wooMax = 15;
-        params.woo = mapRange(vector.x, minX, maxX, wooMin, wooMax);
+        params.woo = mapRange(-vector.x, minX, maxX, wooMin, wooMax);
         break;
       case "faceOval":
         const rollMin = -40;
