@@ -33034,7 +33034,7 @@ function useFaceLandmarkDetection() {
     switch (landmark.group) {
       case "leftEye":
       case "rightEye":
-        const eyesMin = 210;
+        const eyesMin = -20;
         const eyesMax = 5;
         params.eyes = mapRange(vector.x, minX, maxX, eyesMin, eyesMax);
         break;
