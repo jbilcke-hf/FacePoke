@@ -405,7 +405,7 @@ export function useFaceLandmarkDetection() {
          // eyebrow (min: -20, max: 5, default: 0)
         const eyesMin = -20
         const eyesMax = 5
-        params.eyes = mapRange(vector.x, minX, maxX, eyesMin, eyesMax);
+        params.eyes = mapRange(-vector.y, minX, maxX, eyesMin, eyesMax);
 
         break;
       case 'leftEyebrow':
