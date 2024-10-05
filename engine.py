@@ -86,7 +86,7 @@ class Engine:
         else:
             raise ValueError("Unsupported image type")
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=256)
     def _process_image(self, image_hash: str) -> Dict[str, Any]:
         """
         Process the input image and cache the results.
