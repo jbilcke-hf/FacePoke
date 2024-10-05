@@ -56,7 +56,7 @@ async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     try:
-        logger.info("New WebSocket connection established")
+        #logger.info("New WebSocket connection established")
 
         while True:
             msg = await ws.receive()
@@ -76,7 +76,7 @@ async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
 
 
             elif msg.type in (WSMsgType.CLOSE, WSMsgType.ERROR):
-                logger.warning(f"WebSocket connection closed: {msg.type}")
+                #logger.warning(f"WebSocket connection closed: {msg.type}")
                 break
 
     except Exception as e:
@@ -94,7 +94,7 @@ async def handle_modify_image(request: web.Request, ws: web.WebSocketResponse, m
         msg (Dict[str, Any]): The message containing the image or image_hash and modification parameters.
         uuid: A unique identifier for the request.
     """
-    logger.info("Received modify_image request")
+    #logger.info("Received modify_image request")
     try:
         engine = request.app['engine']
         image_hash = msg.get('image_hash')
@@ -114,9 +114,9 @@ async def handle_modify_image(request: web.Request, ws: web.WebSocketResponse, m
             "success": True,
             "uuid": uuid  # Include the UUID in the response
         })
-        logger.info("Successfully sent modified image")
+        #logger.info("Successfully sent modified image")
     except Exception as e:
-        logger.error(f"Error in modify_image: {str(e)}")
+        #logger.error(f"Error in modify_image: {str(e)}")
         await ws.send_json({
             "type": "modified_image",
             "success": False,

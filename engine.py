@@ -97,7 +97,9 @@ class Engine:
         Returns:
             Dict[str, Any]: Processed image data.
         """
-        logger.info(f"Processing image with hash: {image_hash}")
+        # let's hide the logs as there are thousands of message slike this
+        #logger.info(f"Processing image with hash: {image_hash}")
+
         if image_hash not in self.image_cache:
             raise ValueError(f"Image with hash {image_hash} not found in cache")
 
@@ -143,8 +145,9 @@ class Engine:
         Raises:
             ValueError: If there's an error modifying the image or WebP is not supported.
         """
-        logger.info("Starting image modification")
-        logger.debug(f"Modification parameters: {params}")
+        # let's disable those logs completely as there are thousands of message slike this
+        #logger.info("Starting image modification")
+        #logger.debug(f"Modification parameters: {params}")
 
         try:
             image_hash = self.get_image_hash(image_or_hash)
@@ -203,12 +206,12 @@ class Engine:
             result_image.save(buffered, format="WebP", quality=85)  # Adjust quality as needed
             modified_image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-            logger.info("Image modification completed successfully")
+            #logger.info("Image modification completed successfully")
             return f"data:image/webp;base64,{modified_image_base64}"
 
         except Exception as e:
-            logger.error(f"Error in modify_image: {str(e)}")
-            logger.exception("Full traceback:")
+            #logger.error(f"Error in modify_image: {str(e)}")
+            #logger.exception("Full traceback:")
             raise ValueError(f"Failed to modify image: {str(e)}")
 
     async def _apply_facial_modifications(self, x_d_new: torch.Tensor, params: Dict[str, float]) -> None:
