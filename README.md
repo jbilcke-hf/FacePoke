@@ -13,7 +13,7 @@ app_port: 8080
 
 # FacePoke
 
-![FacePoke Demo](https://your-demo-image-url-here.gif)
+This project is not finished! Controls of the eyes, eyebrow etc are not finished yet!
 
 ## Table of Contents
 
