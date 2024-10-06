@@ -44,6 +44,12 @@ It uses the face transformation routines from https://github.com/PowerHouseMan/C
 
 ## Installation
 
+### Before you install
+
+FacePoke has only been tested in a Linux environment, using `Python 3.10` and `CUDA 12.4` (so a NVIDIA GPU).
+
+Contributions are welcome to help supporting other platforms!
+
 ### Local Setup
 
 1. Clone the repository:
@@ -53,8 +59,13 @@ It uses the face transformation routines from https://github.com/PowerHouseMan/C
    ```
 
 2. Install Python dependencies:
+
+   Using a virtual environment (Python venv) is strongly recommended.
+
+   FacePoke has been tested with `Python 3.10`.
+
    ```bash
-   pip install -r requirements.txt
+   pip3 install --upgrade -r requirements.txt
    ```
 
 3. Install frontend dependencies:
