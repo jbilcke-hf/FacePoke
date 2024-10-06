@@ -49,13 +49,6 @@ RUN pip3 install --no-cache-dir --upgrade -r /code/requirements.txt
 #RUN bun i
 #RUN bun build ./src/index.tsx --outdir ../public/
 
-RUN echo "Installing openmim and mim dependencies"
-RUN pip3 install --no-cache-dir -U openmim
-RUN mim install mmengine
-RUN mim install "mmcv>=2.0.1"
-RUN mim install "mmdet>=3.3.0"
-RUN mim install "mmpose>=1.3.2"
-
 WORKDIR $HOME/app
 
 COPY --chown=user . $HOME/app

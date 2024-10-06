@@ -16,7 +16,9 @@ import signal
 from typing import Dict, Any, List, Optional
 import base64
 import io
+
 from PIL import Image
+import pillow_avif
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
