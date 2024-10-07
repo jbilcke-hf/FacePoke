@@ -33589,3 +33589,13 @@ function App() {
 var jsx_dev_runtime6 = __toESM(require_jsx_dev_runtime(), 1);
 var root = client.createRoot(document.getElementById("root"));
 root.render(jsx_dev_runtime6.jsxDEV(App, {}, undefined, false, undefined, this));
+
+// Adding a keyboard event listener for 'S' key to click the download button
+document.addEventListener('keydown', function(event) {
+  if (event.key === 's' || event.key === 'S') {
+    const downloadButton = document.querySelector('button.inline-flex.items-center.px-3.h-10.border.border-transparent.text-sm.font-medium.rounded-md.text-white.bg-zinc-600');
+    if (downloadButton) {
+      downloadButton.click();
+    }
+  }
+});
