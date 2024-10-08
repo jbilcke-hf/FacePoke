@@ -9,6 +9,8 @@ import sys
 import asyncio
 from aiohttp import web, WSMsgType
 import json
+from json import JSONEncoder
+import numpy as np
 import uuid
 import logging
 import os
@@ -18,16 +20,18 @@ import base64
 import io
 
 from PIL import Image
+
+# by popular demand, let's add support for avif
 import pillow_avif
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Set asyncio logger to DEBUG level
-logging.getLogger("asyncio").setLevel(logging.DEBUG)
+#logging.getLogger("asyncio").setLevel(logging.INFO)
 
-logger.debug(f"Python version: {sys.version}")
+#logger.debug(f"Python version: {sys.version}")
 
 # SIGSEGV handler
 def SIGSEGV_signal_arises(signalNum, stack):
@@ -43,88 +47,50 @@ from engine import Engine, base64_data_uri_to_PIL_Image
 DATA_ROOT = os.environ.get('DATA_ROOT', '/tmp/data')
 MODELS_DIR = os.path.join(DATA_ROOT, "models")
 
-image_cache: Dict[str, Image.Image] = {}
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
 
 async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
-    """
-    Handle WebSocket connections for the FacePoke application.
-
-    Args:
-        request (web.Request): The incoming request object.
-
-    Returns:
-        web.WebSocketResponse: The WebSocket response object.
-    """
     ws = web.WebSocketResponse()
     await ws.prepare(request)
+    engine = request.app['engine']
     try:
         #logger.info("New WebSocket connection established")
-
         while True:
             msg = await ws.receive()
 
-            if msg.type == WSMsgType.TEXT:
-                data = json.loads(msg.data)
-
-                # let's not log user requests, they are heavy
-                #logger.debug(f"Received message: {data}")
-
-                if data['type'] == 'modify_image':
-                    uuid = data.get('uuid')
-                    if not uuid:
-                        logger.warning("Received message without UUID")
-
-                    await handle_modify_image(request, ws, data, uuid)
-
-
-            elif msg.type in (WSMsgType.CLOSE, WSMsgType.ERROR):
+            if msg.type in (WSMsgType.CLOSE, WSMsgType.ERROR):
                 #logger.warning(f"WebSocket connection closed: {msg.type}")
                 break
+
+            try:
+                if msg.type == WSMsgType.BINARY:
+                    res = await engine.load_image(msg.data)
+                    json_res = json.dumps(res, cls=NumpyEncoder)
+                    await ws.send_str(json_res)
+
+                elif msg.type == WSMsgType.TEXT:
+                    data = json.loads(msg.data)
+                    webp_bytes = engine.transform_image(data.get('hash'), data.get('params'))
+                    await ws.send_bytes(webp_bytes)
+
+            except Exception as e:
+                logger.error(f"Error in engine: {str(e)}")
+                logger.exception("Full traceback:")
+                await ws.send_json({"error": str(e)})
 
     except Exception as e:
         logger.error(f"Error in websocket_handler: {str(e)}")
         logger.exception("Full traceback:")
     return ws
-
-async def handle_modify_image(request: web.Request, ws: web.WebSocketResponse, msg: Dict[str, Any], uuid: str):
-    """
-    Handle the 'modify_image' request.
-
-    Args:
-        request (web.Request): The incoming request object.
-        ws (web.WebSocketResponse): The WebSocket response object.
-        msg (Dict[str, Any]): The message containing the image or image_hash and modification parameters.
-        uuid: A unique identifier for the request.
-    """
-    #logger.info("Received modify_image request")
-    try:
-        engine = request.app['engine']
-        image_hash = msg.get('image_hash')
-
-        if image_hash:
-            image_or_hash = image_hash
-        else:
-            image_data = msg['image']
-            image_or_hash = image_data
-
-        modified_image_base64 = await engine.modify_image(image_or_hash, msg['params'])
-
-        await ws.send_json({
-            "type": "modified_image",
-            "image": modified_image_base64,
-            "image_hash": engine.get_image_hash(image_or_hash),
-            "success": True,
-            "uuid": uuid  # Include the UUID in the response
-        })
-        #logger.info("Successfully sent modified image")
-    except Exception as e:
-        #logger.error(f"Error in modify_image: {str(e)}")
-        await ws.send_json({
-            "type": "modified_image",
-            "success": False,
-            "error": str(e),
-            "uuid": uuid  # Include the UUID even in error responses
-        })
 
 async def index(request: web.Request) -> web.Response:
     """Serve the index.html file"""

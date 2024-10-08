@@ -7,11 +7,14 @@
 torch
 torchvision
 torchaudio
-
+torchgeometry
 
 # --------------------------------------------------------------------
 # Common libraries for LivePortrait and all
 # --------------------------------------------------------------------
+
+# LRU cache compatible with asyncio
+async-lru==2.0.4
 
 # note: gradio is only used for the cropping utility
 gradio==5.0.0b4
@@ -35,8 +38,8 @@ ffmpeg-python==0.2.0
 onnxruntime-gpu==1.19.2
 onnx==1.16.2
 scikit-image==0.20.0
-albumentations==1.4.10
-matplotlib==3.9.0
+albumentations==1.3.1
+matplotlib==3.7.2
 tyro==0.8.5
 chumpy==0.70
 
@@ -45,16 +48,24 @@ accelerate==0.34.2
 tensorflow==2.12.0
 tensorboard==2.12.0
 transformers==4.39.2
-huggingface-hub==0.25.1
-safetensors==0.4.5
 
 gdown==5.2.0
 requests==2.32.3
 omegaconf==2.3.0
+
 pydantic==2.9.2
-dnspython>=2.0.0
-ifaddr>=0.2.0
+
+# --------------------------------------------------------------------
+# RESERVED FOR FUTURE USAGE
+#
+# (it adds bloat, so you can remove them if you want)
+# --------------------------------------------------------------------
 aiohttp==3.10.5
+av==12.3.0
+einops==0.7.0
+safetensors==0.4.5
+huggingface-hub==0.25.1
+optimum-quanto==0.2.4
 
 # --------------------------------------------------------------------
 # Used for advanced LivePortrait features

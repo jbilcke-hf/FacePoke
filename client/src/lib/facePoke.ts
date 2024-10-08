@@ -1,153 +1,35 @@
-import { v4 as uuidv4 } from 'uuid';
-import { CircularBuffer } from './circularBuffer';
-import { useMainStore } from '@/hooks/useMainStore';
+import { WebSocketState, type ImageModificationParams, type OnServerResponse } from "@/types";
 
-/**
- * Represents a tracked request with its UUID and timestamp.
- */
-export interface TrackedRequest {
-  uuid: string;
-  timestamp: number;
-}
-
-/**
- * Represents the parameters for image modification.
- */
-export interface ImageModificationParams {
-  eyes: number;
-  eyebrow: number;
-  wink: number;
-  pupil_x: number;
-  pupil_y: number;
-  aaa: number;
-  eee: number;
-  woo: number;
-  smile: number;
-  rotate_pitch: number;
-  rotate_yaw: number;
-  rotate_roll: number;
-}
-
-/**
- * Represents a message to modify an image.
- */
-export interface ModifyImageMessage {
-  type: 'modify_image';
-  image?: string;
-  image_hash?: string;
-  params: Partial<ImageModificationParams>;
-}
-
-
-/**
- * Callback type for handling modified images.
- */
-type OnModifiedImage = (image: string, image_hash: string) => void;
-
-/**
- * Enum representing the different states of a WebSocket connection.
- */
-enum WebSocketState {
-  CONNECTING = 0,
-  OPEN = 1,
-  CLOSING = 2,
-  CLOSED = 3
-}
 
 /**
  * FacePoke class manages the WebSocket connection
  */
 export class FacePoke {
   private ws: WebSocket | null = null;
-  private readonly connectionId: string = uuidv4();
   private isUnloading: boolean = false;
-  private onModifiedImage: OnModifiedImage = () => {};
+  private onServerResponse: OnServerResponse = async () => {};
   private reconnectAttempts: number = 0;
   private readonly maxReconnectAttempts: number = 5;
   private readonly reconnectDelay: number = 5000;
   private readonly eventListeners: Map<string, Set<Function>> = new Map();
-
-  private requestTracker: Map<string, TrackedRequest> = new Map();
-  private responseTimeBuffer: CircularBuffer<number>;
-  private readonly MAX_TRACKED_TIMES = 5; // Number of recent response times to track
 
   /**
    * Creates an instance of FacePoke.
    * Initializes the WebSocket connection.
    */
   constructor() {
-    console.log(`[FacePoke] Initializing FacePoke instance with connection ID: ${this.connectionId}`);
+    console.log(`[FacePoke] Initializing FacePoke instance`);
     this.initializeWebSocket();
     this.setupUnloadHandler();
-
-    this.responseTimeBuffer = new CircularBuffer<number>(this.MAX_TRACKED_TIMES);
-    console.log(`[FacePoke] Initialized response time tracker with capacity: ${this.MAX_TRACKED_TIMES}`);
-  }
-
-
-  /**
-   * Generates a unique UUID for a request and starts tracking it.
-   * @returns The generated UUID for the request.
-   */
-  private trackRequest(): string {
-    const uuid = uuidv4();
-    this.requestTracker.set(uuid, { uuid, timestamp: Date.now() });
-    // console.log(`[FacePoke] Started tracking request with UUID: ${uuid}`);
-    return uuid;
-  }
-
-   /**
-   * Completes tracking for a request and updates response time statistics.
-   * @param uuid - The UUID of the completed request.
-   */
-   private completeRequest(uuid: string): void {
-    const request = this.requestTracker.get(uuid);
-    if (request) {
-      const responseTime = Date.now() - request.timestamp;
-      this.responseTimeBuffer.push(responseTime);
-      this.requestTracker.delete(uuid);
-      this.updateThrottleTime();
-      console.log(`[FacePoke] Completed request ${uuid}. Response time: ${responseTime}ms`);
-    } else {
-      console.warn(`[FacePoke] Attempted to complete unknown request: ${uuid}`);
-    }
-  }
-
-    /**
-   * Calculates the average response time from recent requests.
-   * @returns The average response time in milliseconds.
-   */
-    private calculateAverageResponseTime(): number {
-      const times = this.responseTimeBuffer.getAll();
-
-      const averageLatency = useMainStore.getState().averageLatency;
-
-      if (times.length === 0) return averageLatency;
-      const sum = times.reduce((acc, time) => acc + time, 0);
-      return sum / times.length;
-    }
-
-  /**
-   * Updates the throttle time based on recent response times.
-   */
-  private updateThrottleTime(): void {
-    const { minLatency, maxLatency, averageLatency, setAverageLatency } = useMainStore.getState();
-    const avgResponseTime = this.calculateAverageResponseTime();
-    const newLatency = Math.min(minLatency, Math.max(minLatency, avgResponseTime));
-
-    if (newLatency !== averageLatency) {
-      setAverageLatency(newLatency)
-      console.log(`[FacePoke] Updated throttle time (latency is ${newLatency}ms)`);
-    }
   }
 
   /**
    * Sets the callback function for handling modified images.
    * @param handler - The function to be called when a modified image is received.
    */
-  public setOnModifiedImage(handler: OnModifiedImage): void {
-    this.onModifiedImage = handler;
-    console.log(`[FacePoke] onModifiedImage handler set`);
+  public setOnServerResponse(handler: OnServerResponse): void {
+    this.onServerResponse = handler;
+    console.log(`[FacePoke] onServerResponse handler set`);
   }
 
   /**
@@ -165,51 +47,34 @@ export class FacePoke {
    * Implements exponential backoff for reconnection attempts.
    */
   private async initializeWebSocket(): Promise<void> {
-    console.log(`[FacePoke][${this.connectionId}] Initializing WebSocket connection`);
+    console.log(`[FacePoke] Initializing WebSocket connection`);
 
     const connect = () => {
       this.ws = new WebSocket(`wss://${window.location.host}/ws`);
 
       this.ws.onopen = this.handleWebSocketOpen.bind(this);
-      this.ws.onmessage = this.handleWebSocketMessage.bind(this);
       this.ws.onclose = this.handleWebSocketClose.bind(this);
       this.ws.onerror = this.handleWebSocketError.bind(this);
+      this.ws.onmessage = (this.handleWebSocketMessage.bind(this) as any)
     };
-
-    // const debouncedConnect = debounce(connect, this.reconnectDelay, { leading: true, trailing: false });
 
     connect(); // Initial connection attempt
   }
 
+  private handleWebSocketMessage(msg: MessageEvent) {
+    if (typeof msg.data === "string") {
+      this.onServerResponse({ loaded: JSON.parse(msg.data) as any });
+    } else if (typeof msg.data !== "undefined" ) {
+      this.onServerResponse({ image: msg.data as unknown as Blob });
+    }
+  }
   /**
    * Handles the WebSocket open event.
    */
   private handleWebSocketOpen(): void {
-    console.log(`[FacePoke][${this.connectionId}] WebSocket connection opened`);
+    console.log(`[FacePoke] WebSocket connection opened`);
     this.reconnectAttempts = 0; // Reset reconnect attempts on successful connection
     this.emitEvent('websocketOpen');
-  }
-
-  // Update handleWebSocketMessage to complete request tracking
-  private handleWebSocketMessage(event: MessageEvent): void {
-    try {
-      const data = JSON.parse(event.data);
-      // console.log(`[FacePoke][${this.connectionId}] Received JSON data:`, data);
-
-      if (data.uuid) {
-        this.completeRequest(data.uuid);
-      }
-
-      if (data.type === 'modified_image') {
-        if (data?.image) {
-          this.onModifiedImage(data.image, data.image_hash);
-        }
-      }
-
-      this.emitEvent('message', data);
-    } catch (error) {
-      console.error(`[FacePoke][${this.connectionId}] Error parsing WebSocket message:`, error);
-    }
   }
 
   /**
@@ -219,9 +84,9 @@ export class FacePoke {
    */
   private handleWebSocketClose(event: CloseEvent): void {
     if (event.wasClean) {
-      console.log(`[FacePoke][${this.connectionId}] WebSocket connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+      console.log(`[FacePoke] WebSocket connection closed cleanly, code=${event.code}, reason=${event.reason}`);
     } else {
-      console.warn(`[FacePoke][${this.connectionId}] WebSocket connection abruptly closed`);
+      console.warn(`[FacePoke] WebSocket connection abruptly closed`);
     }
 
     this.emitEvent('websocketClose', event);
@@ -230,10 +95,10 @@ export class FacePoke {
     if (!this.isUnloading && this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = Math.min(1000 * (2 ** this.reconnectAttempts), 30000); // Exponential backoff, max 30 seconds
-      console.log(`[FacePoke][${this.connectionId}] Attempting to reconnect in ${delay}ms (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      console.log(`[FacePoke] Attempting to reconnect in ${delay}ms (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
       setTimeout(() => this.initializeWebSocket(), delay);
     } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error(`[FacePoke][${this.connectionId}] Max reconnect attempts reached. Please refresh the page.`);
+      console.error(`[FacePoke] Max reconnect attempts reached. Please refresh the page.`);
       this.emitEvent('maxReconnectAttemptsReached');
     }
   }
@@ -243,7 +108,7 @@ export class FacePoke {
    * @param error - The error event.
    */
   private handleWebSocketError(error: Event): void {
-    console.error(`[FacePoke][${this.connectionId}] WebSocket error:`, error);
+    console.error(`[FacePoke] WebSocket error:`, error);
     this.emitEvent('websocketError', error);
   }
 
@@ -261,33 +126,32 @@ export class FacePoke {
     this.emitEvent('cleanup');
   }
 
-  /**
-   * Modifies an image based on the provided parameters
-   * @param image - The data-uri base64 image to modify.
-   * @param imageHash - The hash of the image to modify.
-   * @param params - The parameters for image modification.
-   */
-    public modifyImage(image: string | null, imageHash: string | null, params: Partial<ImageModificationParams>): void {
-      try {
-        const message: ModifyImageMessage = {
-          type: 'modify_image',
-          params: params
-        };
+  public async loadImage(image: string): Promise<void> {
+     // Extract the base64 part if it's a data URL
+    const base64Data = image.split(',')[1] || image;
 
-        if (image) {
-          message.image = image;
-        } else if (imageHash) {
-          message.image_hash = imageHash;
-        } else {
-          throw new Error('Either image or imageHash must be provided');
-        }
+    const buffer = new Uint8Array(atob(base64Data).split('').map(char => char.charCodeAt(0)));
+    const blob = new Blob([buffer], { type: 'application/octet-binary' });
+    this.sendBlobMessage(await blob.arrayBuffer());
+  }
 
-        this.sendJsonMessage(message);
-        // console.log(`[FacePoke] Sent modify image request with UUID: ${uuid}`);
-      } catch (err) {
-        console.error(`[FacePoke] Failed to modify the image:`, err);
-      }
+  public transformImage(hash: string, params: Partial<ImageModificationParams>): void {
+    this.sendJsonMessage({ hash, params });
+  }
+
+  private sendBlobMessage(buffer: ArrayBuffer): void {
+    if (!this.ws || this.ws.readyState !== WebSocketState.OPEN) {
+      const error = new Error('WebSocket connection is not open');
+      console.error('[FacePoke] Error sending JSON message:', error);
+      this.emitEvent('sendJsonMessageError', error);
+      throw error;
     }
+    try {
+      this.ws.send(buffer);
+    } catch (err) {
+      console.error(`failed to send the WebSocket message: ${err}`)
+    }
+  }
 
   /**
    * Sends a JSON message through the WebSocket connection with request tracking.
@@ -301,11 +165,11 @@ export class FacePoke {
       this.emitEvent('sendJsonMessageError', error);
       throw error;
     }
-
-    const uuid = this.trackRequest();
-    const messageWithUuid = { ...message, uuid };
-    // console.log(`[FacePoke] Sending JSON message with UUID ${uuid}:`, messageWithUuid);
-    this.ws.send(JSON.stringify(messageWithUuid));
+    try {
+      this.ws.send(JSON.stringify(message));
+    } catch (err) {
+      console.error(`failed to send the WebSocket message: ${err}`)
+    }
   }
 
 /**

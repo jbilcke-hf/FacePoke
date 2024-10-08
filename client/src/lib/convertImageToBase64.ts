@@ -1,4 +1,4 @@
-export async function convertImageToBase64(imageFile: File): Promise<string> {
+export async function convertImageToBase64(imageFileOrBlob: File | Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -11,9 +11,9 @@ export async function convertImageToBase64(imageFile: File): Promise<string> {
     };
 
     reader.onerror = () => {
-      reject(new Error('Error reading file'));
+      reject(new Error('Error reading file or blob'));
     };
 
-    reader.readAsDataURL(imageFile);
+    reader.readAsDataURL(imageFileOrBlob);
   });
 }

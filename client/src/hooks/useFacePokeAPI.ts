@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 
 import { facePoke } from "../lib/facePoke";
-import { useMainStore } from "./useMainStore";
 
 export function useFacePokeAPI() {
 
    // State for FacePoke
-  const [status, setStatus] = useState('');
   const [isDebugMode, setIsDebugMode] = useState(false);
   const [interruptMessage, setInterruptMessage] = useState<string | null>(null);
 
@@ -33,8 +31,6 @@ export function useFacePokeAPI() {
 
   return {
     facePoke,
-    status,
-    setStatus,
     isDebugMode,
     setIsDebugMode,
     interruptMessage,

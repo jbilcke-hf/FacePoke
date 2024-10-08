@@ -1,6 +1,6 @@
 ---
 title: FacePoke
-emoji: 💬
+emoji: 🙂‍↔️👈
 colorFrom: yellow
 colorTo: red
 sdk: docker
@@ -114,6 +114,14 @@ The project structure is organized as follows:
 - `client/`: Frontend React application.
   - `src/`: TypeScript source files.
   - `public/`: Static assets and built files.
+
+### Increasing the framerate
+
+I am testing various things to increase the framerate.
+
+One project is to only transmit the modified head, instead of the whole image.
+
+Another one is to automatically adapt to the server and network speed.
 
 ## Contributing
 

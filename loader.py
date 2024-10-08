@@ -5,8 +5,6 @@ import asyncio
 import aiohttp
 import requests
 from huggingface_hub import hf_hub_download
-import sentencepiece
-
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -24,12 +22,23 @@ HF_REPO_ID = "jbilcke-hf/model-cocktail"
 MODEL_FILES = [
     "dwpose/dw-ll_ucoco_384.pth",
     "face-detector/s3fd-619a316812.pth",
+
     "liveportrait/spade_generator.pth",
     "liveportrait/warping_module.pth",
     "liveportrait/motion_extractor.pth",
     "liveportrait/stitching_retargeting_module.pth",
     "liveportrait/appearance_feature_extractor.pth",
     "liveportrait/landmark.onnx",
+
+    # For animal mode 🐶🐱
+    # however they say animal mode doesn't support stitching yet?
+    # https://github.com/KwaiVGI/LivePortrait/blob/main/assets/docs/changelog/2024-08-02.md#updates-on-animals-mode
+    #"liveportrait-animals/warping_module.pth",
+    #"liveportrait-animals/spade_generator.pth",
+    #"liveportrait-animals/motion_extractor.pth",
+    #"liveportrait-animals/appearance_feature_extractor.pth",
+    #"liveportrait-animals/stitching_retargeting_module.pth",
+    #"liveportrait-animals/xpose.pth",
 
     # this is a hack, instead we should probably try to
     # fix liveportrait/utils/dependencies/insightface/utils/storage.py

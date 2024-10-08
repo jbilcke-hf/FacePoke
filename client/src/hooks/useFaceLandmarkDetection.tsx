@@ -6,58 +6,35 @@ import { useMainStore } from './useMainStore';
 import useThrottledCallback from 'beautiful-react-hooks/useThrottledCallback';
 
 import { landmarkGroups, FACEMESH_LIPS, FACEMESH_LEFT_EYE, FACEMESH_LEFT_EYEBROW, FACEMESH_RIGHT_EYE, FACEMESH_RIGHT_EYEBROW, FACEMESH_FACE_OVAL } from './landmarks';
-
-// New types for improved type safety
-export type LandmarkGroup = 'lips' | 'leftEye' | 'leftEyebrow' | 'rightEye' | 'rightEyebrow' | 'faceOval' | 'background';
-export type LandmarkCenter = { x: number; y: number; z: number };
-export type ClosestLandmark = { group: LandmarkGroup; distance: number; vector: { x: number; y: number; z: number } };
-
-export type MediaPipeResources = {
-  faceLandmarker: vision.FaceLandmarker | null;
-  drawingUtils: vision.DrawingUtils | null;
-};
+import type { ActionMode, ClosestLandmark, LandmarkCenter, LandmarkGroup, MediaPipeResources } from '@/types';
 
 export function useFaceLandmarkDetection() {
-  const error = useMainStore(s => s.error);
   const setError = useMainStore(s => s.setError);
-  const imageFile = useMainStore(s => s.imageFile);
-  const setImageFile = useMainStore(s => s.setImageFile);
-  const originalImage = useMainStore(s => s.originalImage);
-  const originalImageHash = useMainStore(s => s.originalImageHash);
-  const setOriginalImageHash = useMainStore(s => s.setOriginalImageHash);
   const previewImage = useMainStore(s => s.previewImage);
-  const setPreviewImage = useMainStore(s => s.setPreviewImage);
-  const resetImage = useMainStore(s => s.resetImage);
+  const handleServerResponse = useMainStore(s => s.handleServerResponse);
+  const faceLandmarks = useMainStore(s => s.faceLandmarks);
 
-  ;(window as any).debugJuju = useMainStore;
   ////////////////////////////////////////////////////////////////////////
-  // ok so apparently I cannot vary the latency, or else there is a bug
-  // const averageLatency = useMainStore(s => s.averageLatency);
-  const averageLatency = 220
+  // if we only send the face/square then we can use 138ms
+  // unfortunately it doesn't work well yet
+  // const throttleInMs = 138ms
+  const throttleInMs = 180
   ////////////////////////////////////////////////////////////////////////
 
   // State for face detection
-  const [faceLandmarks, setFaceLandmarks] = useState<vision.NormalizedLandmark[][]>([]);
   const [isMediaPipeReady, setIsMediaPipeReady] = useState(false);
   const [isDrawingUtilsReady, setIsDrawingUtilsReady] = useState(false);
-  const [blendShapes, setBlendShapes] = useState<vision.Classifications[]>([]);
 
   // State for mouse interaction
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-  const [dragEnd, setDragEnd] = useState<{ x: number; y: number } | null>(null);
 
   const [isDragging, setIsDragging] = useState(false);
-  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-  const currentMousePosRef = useRef<{ x: number; y: number } | null>(null);
-  const lastModifiedImageHashRef = useRef<string | null>(null);
 
   const [currentLandmark, setCurrentLandmark] = useState<ClosestLandmark | null>(null);
   const [previousLandmark, setPreviousLandmark] = useState<ClosestLandmark | null>(null);
   const [currentOpacity, setCurrentOpacity] = useState(0);
   const [previousOpacity, setPreviousOpacity] = useState(0);
-
-  const [isHovering, setIsHovering] = useState(false);
 
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -222,6 +199,9 @@ export function useFaceLandmarkDetection() {
 
   // Detect face landmarks
   const detectFaceLandmarks = useCallback(async (imageDataUrl: string) => {
+    const { setFaceLandmarks,setBlendShapes } = useMainStore.getState();
+
+
     // console.log('Attempting to detect face landmarks...');
     if (!isMediaPipeReady) {
       console.log('MediaPipe not ready. Skipping detection.');
@@ -246,6 +226,7 @@ export function useFaceLandmarkDetection() {
 
     setFaceLandmarks(faceLandmarkerResult.faceLandmarks);
     setBlendShapes(faceLandmarkerResult.faceBlendshapes || []);
+
 
     if (faceLandmarkerResult.faceLandmarks && faceLandmarkerResult.faceLandmarks[0]) {
       computeLandmarkCenters(faceLandmarkerResult.faceLandmarks[0]);
@@ -352,279 +333,147 @@ export function useFaceLandmarkDetection() {
     detectFaceLandmarks(previewImage);
   }, [isMediaPipeReady, isDrawingUtilsReady, previewImage])
 
-
-
-  const modifyImage = useCallback(({ landmark, vector }: {
-      landmark: ClosestLandmark
-      vector: { x: number; y: number; z: number }
-    }) => {
-
-    const {
-      originalImage,
-      originalImageHash,
-      params: previousParams,
-      setParams,
-      setError
-    } = useMainStore.getState()
-
-
-    if (!originalImage) {
-      console.error('Image file or facePoke not available');
-      return;
-    }
-
-    const params = {
-      ...previousParams
-    }
-
-    const minX = -0.50;
-    const maxX = 0.50;
-    const minY = -0.50;
-    const maxY = 0.50;
-
-    // Function to map a value from one range to another
-    const mapRange = (value: number, inMin: number, inMax: number, outMin: number, outMax: number): number => {
-      return Math.min(outMax, Math.max(outMin, ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin));
-    };
-
-    console.log("modifyImage:", {
-      originalImage,
-      originalImageHash,
-      landmark,
-      vector,
-      minX,
-      maxX,
-      minY,
-      maxY,
-    })
-
-    // Map landmarks to ImageModificationParams
-    switch (landmark.group) {
-      case 'leftEye':
-      case 'rightEye':
-         // eyebrow (min: -20, max: 5, default: 0)
-        const eyesMin = -20
-        const eyesMax = 5
-        params.eyes = mapRange(-vector.y, minX, maxX, eyesMin, eyesMax);
-
-        break;
-      case 'leftEyebrow':
-      case 'rightEyebrow':
-        // moving the mouse vertically for the eyebrow
-        // should make them up/down
-        // eyebrow (min: -10, max: 15, default: 0)
-        const eyebrowMin = -10
-        const eyebrowMax = 15
-        params.eyebrow = mapRange(-vector.y, minY, maxY, eyebrowMin, eyebrowMax);
-
-        break;
-      case 'lips':
-        // aaa (min: -30, max: 120, default: 0)
-        //const aaaMin = -30
-        //const aaaMax = 120
-        //params.aaa = mapRange(vector.x, minY, maxY, aaaMin, aaaMax);
-
-        // eee (min: -20, max: 15, default: 0)
-        const eeeMin = -20
-        const eeeMax = 15
-        params.eee = mapRange(-vector.y, minY, maxY, eeeMin, eeeMax);
-
-
-        // woo (min: -20, max: 15, default: 0)
-        const wooMin = -20
-        const wooMax = 15
-        params.woo = mapRange(-vector.x, minX, maxX, wooMin, wooMax);
-
-        break;
-      case 'faceOval':
-          // displacing the face horizontally by moving the mouse on the X axis
-          // should perform a yaw rotation
-          // rotate_roll (min: -20, max: 20, default: 0)
-          const rollMin = -40
-          const rollMax = 40
-
-          // note: we invert the axis here
-          params.rotate_roll = mapRange(vector.x, minX, maxX, rollMin, rollMax);
-          break;
-
-      case 'background':
-        // displacing the face horizontally by moving the mouse on the X axis
-        // should perform a yaw rotation
-        // rotate_yaw (min: -20, max: 20, default: 0)
-        const yawMin = -40
-        const yawMax = 40
-
-        // note: we invert the axis here
-        params.rotate_yaw = mapRange(-vector.x, minX, maxX, yawMin, yawMax);
-
-        // displacing the face vertically by moving the mouse on the Y axis
-        // should perform a pitch rotation
-        // rotate_pitch (min: -20, max: 20, default: 0)
-        const pitchMin = -40
-        const pitchMax = 40
-        params.rotate_pitch = mapRange(vector.y, minY, maxY, pitchMin, pitchMax);
-        break;
-      default:
-        return
-    }
-
-    for (const [key, value] of Object.entries(params)) {
-      if (isNaN(value as any) || !isFinite(value as any)) {
-        console.log(`${key} is NaN, aborting`)
-        return
-      }
-    }
-    console.log(`PITCH=${params.rotate_pitch || 0}, YAW=${params.rotate_yaw || 0}, ROLL=${params.rotate_roll || 0}`);
-
-    setParams(params)
-    try {
-      // For the first request or when the image file changes, send the full image
-      if (!lastModifiedImageHashRef.current || lastModifiedImageHashRef.current !== originalImageHash) {
-        lastModifiedImageHashRef.current = originalImageHash;
-        facePoke.modifyImage(originalImage, null, params);
-      } else {
-        // For subsequent requests, send only the hash
-        facePoke.modifyImage(null, lastModifiedImageHashRef.current, params);
-      }
-    } catch (error) {
-      // console.error('Error modifying image:', error);
-      setError('Failed to modify image');
-    }
-  }, []);
-
-  // this is throttled by our average latency
   const modifyImageWithRateLimit = useThrottledCallback((params: {
     landmark: ClosestLandmark
     vector: { x: number; y: number; z: number }
+    mode: ActionMode
   }) => {
-    modifyImage(params);
-  }, [modifyImage], averageLatency);
+    useMainStore.getState().modifyImage(params);
+  }, [], throttleInMs);
 
-  const handleMouseEnter = useCallback(() => {
-    setIsHovering(true);
-  }, []);
+  useEffect(() => {
+    facePoke.setOnServerResponse(handleServerResponse);
+  }, [handleServerResponse]);
 
-  const handleMouseLeave = useCallback(() => {
-    setIsHovering(false);
-  }, []);
-
-  // Update mouse event handlers
-  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleStart = useCallback((x: number, y: number, mode: ActionMode) => {
     if (!canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
+    const normalizedX = (x - rect.left) / rect.width;
+    const normalizedY = (y - rect.top) / rect.height;
 
-    const landmark = findClosestLandmark(x, y);
-    console.log(`Mouse down on ${landmark.group}`);
+    const landmark = findClosestLandmark(normalizedX, normalizedY);
+    // console.log(`Interaction start on ${landmark.group}`);
     setActiveLandmark(landmark);
-    setDragStart({ x, y });
-    dragStartRef.current = { x, y };
+    setDragStart({ x: normalizedX, y: normalizedY });
+    dragStartRef.current = { x: normalizedX, y: normalizedY };
   }, [findClosestLandmark, setActiveLandmark, setDragStart]);
 
-  const handleMouseMove = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMove = useCallback((x: number, y: number,  mode: ActionMode) => {
     if (!canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
+    const normalizedX = (x - rect.left) / rect.width;
+    const normalizedY = (y - rect.top) / rect.height;
 
-    // only send an API request to modify the image if we are actively dragging
+    const landmark = findClosestLandmark(
+      normalizedX,
+      normalizedY,
+      dragStart && dragStartRef.current ? currentLandmark?.group : undefined
+    );
+
+    const landmarkData = landmarkCenters[landmark?.group]
+    const vector = landmarkData ? {
+      x: normalizedX - landmarkData.x,
+      y: normalizedY - landmarkData.y,
+      z: 0
+    } :  {
+      x: 0.5,
+      y: 0.5,
+      z: 0
+    }
+
     if (dragStart && dragStartRef.current) {
-
-      const landmark = findClosestLandmark(x, y, currentLandmark?.group);
-
-      console.log(`Dragging mouse (was over ${currentLandmark?.group || 'nothing'}, now over ${landmark.group})`);
-
-      // Compute the vector from the landmark center to the current mouse position
-      modifyImageWithRateLimit({
-        landmark: currentLandmark || landmark, // this will still use the initially selected landmark
-        vector: {
-          x: x - landmarkCenters[landmark.group].x,
-          y: y - landmarkCenters[landmark.group].y,
-          z: 0 // Z is 0 as mouse interaction is 2D
-        }
-      });
       setIsDragging(true);
+      modifyImageWithRateLimit({
+        landmark: currentLandmark || landmark,
+        vector,
+        mode
+      });
     } else {
-      const landmark = findClosestLandmark(x, y);
-
-      //console.log(`Moving mouse over ${landmark.group}`);
-      // console.log(`Simple mouse move over ${landmark.group}`);
-
-      // we need to be careful here, we don't want to change the active
-      // landmark dynamically if we are busy dragging
-
       if (!currentLandmark || (currentLandmark?.group !== landmark?.group)) {
-        // console.log("setting activeLandmark to ", landmark);
         setActiveLandmark(landmark);
       }
-      setIsHovering(true); // Ensure hovering state is maintained during movement
+      modifyImageWithRateLimit({
+        landmark,
+        vector,
+        mode: 'HOVERING'
+      });
     }
-  }, [currentLandmark, dragStart, setIsHovering, setActiveLandmark, setIsDragging, modifyImageWithRateLimit, landmarkCenters]);
+  }, [currentLandmark, dragStart, setActiveLandmark, setIsDragging, modifyImageWithRateLimit, landmarkCenters]);
 
-  const handleMouseUp = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleEnd = useCallback((x: number, y: number,  mode: ActionMode) => {
     if (!canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
+    const normalizedX = (x - rect.left) / rect.width;
+    const normalizedY = (y - rect.top) / rect.height;
 
-    // only send an API request to modify the image if we are actively dragging
     if (dragStart && dragStartRef.current) {
+      const landmark = findClosestLandmark(normalizedX, normalizedY, currentLandmark?.group);
 
-      const landmark = findClosestLandmark(x, y, currentLandmark?.group);
-
-      console.log(`Mouse up (was over ${currentLandmark?.group || 'nothing'}, now over ${landmark.group})`);
-
-      // Compute the vector from the landmark center to the current mouse position
       modifyImageWithRateLimit({
-        landmark: currentLandmark || landmark, // this will still use the initially selected landmark
+        landmark: currentLandmark || landmark,
         vector: {
-          x: x - landmarkCenters[landmark.group].x,
-          y: y - landmarkCenters[landmark.group].y,
-          z: 0 // Z is 0 as mouse interaction is 2D
-        }
+          x: normalizedX - landmarkCenters[landmark.group].x,
+          y: normalizedY - landmarkCenters[landmark.group].y,
+          z: 0
+        },
+        mode
       });
     }
 
     setIsDragging(false);
     dragStartRef.current = null;
     setActiveLandmark(undefined);
-  }, [currentLandmark, isDragging, modifyImageWithRateLimit, findClosestLandmark, setActiveLandmark, landmarkCenters, modifyImageWithRateLimit, setIsDragging]);
+  }, [currentLandmark, isDragging, modifyImageWithRateLimit, findClosestLandmark, setActiveLandmark, landmarkCenters, setIsDragging]);
 
-  useEffect(() => {
-    facePoke.setOnModifiedImage((image: string, image_hash: string) => {
-      if (image) {
-        setPreviewImage(image);
-      }
-      setOriginalImageHash(image_hash);
-      lastModifiedImageHashRef.current = image_hash;
-    });
-  }, [setPreviewImage, setOriginalImageHash]);
+  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+    const  mode: ActionMode = event.button === 0 ? 'PRIMARY' : 'SECONDARY';
+    handleStart(event.clientX, event.clientY, mode);
+  }, [handleStart]);
+
+  const handleMouseMove = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+    const  mode: ActionMode =  event.buttons === 1 ? 'PRIMARY' : 'SECONDARY';
+    handleMove(event.clientX, event.clientY, mode);
+  }, [handleMove]);
+
+  const handleMouseUp = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+    const  mode: ActionMode = event.buttons === 1 ? 'PRIMARY' : 'SECONDARY';
+    handleEnd(event.clientX, event.clientY, mode);
+  }, [handleEnd]);
+
+  const handleTouchStart = useCallback((event: React.TouchEvent<HTMLCanvasElement>) => {
+    const  mode: ActionMode = event.touches.length === 1 ? 'PRIMARY' : 'SECONDARY';
+    const touch = event.touches[0];
+    handleStart(touch.clientX, touch.clientY, mode);
+  }, [handleStart]);
+
+  const handleTouchMove = useCallback((event: React.TouchEvent<HTMLCanvasElement>) => {
+    const  mode: ActionMode = event.touches.length === 1 ? 'PRIMARY' : 'SECONDARY';
+    const touch = event.touches[0];
+    handleMove(touch.clientX, touch.clientY, mode);
+  }, [handleMove]);
+
+  const handleTouchEnd = useCallback((event: React.TouchEvent<HTMLCanvasElement>) => {
+    const  mode: ActionMode = event.changedTouches.length === 1 ? 'PRIMARY' : 'SECONDARY';
+    const touch = event.changedTouches[0];
+    handleEnd(touch.clientX, touch.clientY, mode);
+  }, [handleEnd]);
 
   return {
     canvasRef,
     canvasRefCallback,
     mediaPipeRef,
-    faceLandmarks,
     isMediaPipeReady,
     isDrawingUtilsReady,
-    blendShapes,
-
-    //dragStart,
-    //setDragStart,
-    //dragEnd,
-    //setDragEnd,
-    setFaceLandmarks,
-    setBlendShapes,
 
     handleMouseDown,
     handleMouseUp,
     handleMouseMove,
-    handleMouseEnter,
-    handleMouseLeave,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
 
     currentLandmark,
     currentOpacity,

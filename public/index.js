@@ -29660,72 +29660,162 @@ Yh.prototype.detectForVideo = Yh.prototype.F, Yh.prototype.detect = Yh.prototype
   return Ka(Yh, t2, e2);
 }, Yh.POSE_CONNECTIONS = Eh;
 
-// node_modules/uuid/dist/esm-browser/stringify.js
-function unsafeStringify(arr, offset = 0) {
-  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
-}
-var byteToHex = [];
-for (i2 = 0;i2 < 256; ++i2) {
-  byteToHex.push((i2 + 256).toString(16).slice(1));
-}
-var i2;
+// src/types.ts
+var WebSocketState;
+(function(WebSocketState2) {
+  WebSocketState2[WebSocketState2["CONNECTING"] = 0] = "CONNECTING";
+  WebSocketState2[WebSocketState2["OPEN"] = 1] = "OPEN";
+  WebSocketState2[WebSocketState2["CLOSING"] = 2] = "CLOSING";
+  WebSocketState2[WebSocketState2["CLOSED"] = 3] = "CLOSED";
+})(WebSocketState || (WebSocketState = {}));
 
-// node_modules/uuid/dist/esm-browser/rng.js
-var getRandomValues;
-var rnds8 = new Uint8Array(16);
-function rng() {
-  if (!getRandomValues) {
-    getRandomValues = typeof crypto !== "undefined" && crypto.getRandomValues && crypto.getRandomValues.bind(crypto);
-    if (!getRandomValues) {
-      throw new Error("crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported");
+// src/lib/facePoke.ts
+class FacePoke {
+  ws = null;
+  isUnloading = false;
+  onServerResponse = async () => {
+  };
+  reconnectAttempts = 0;
+  maxReconnectAttempts = 5;
+  reconnectDelay = 5000;
+  eventListeners = new Map;
+  constructor() {
+    console.log(`[FacePoke] Initializing FacePoke instance`);
+    this.initializeWebSocket();
+    this.setupUnloadHandler();
+  }
+  setOnServerResponse(handler) {
+    this.onServerResponse = handler;
+    console.log(`[FacePoke] onServerResponse handler set`);
+  }
+  async startWebSocket() {
+    console.log(`[FacePoke] Starting WebSocket connection.`);
+    if (!this.ws || this.ws.readyState !== WebSocketState.OPEN) {
+      await this.initializeWebSocket();
     }
   }
-  return getRandomValues(rnds8);
-}
-
-// node_modules/uuid/dist/esm-browser/native.js
-var randomUUID = typeof crypto !== "undefined" && crypto.randomUUID && crypto.randomUUID.bind(crypto);
-var native_default = {
-  randomUUID
-};
-
-// node_modules/uuid/dist/esm-browser/v4.js
-var v4 = function(options, buf, offset) {
-  if (native_default.randomUUID && !buf && !options) {
-    return native_default.randomUUID();
+  async initializeWebSocket() {
+    console.log(`[FacePoke] Initializing WebSocket connection`);
+    const connect = () => {
+      this.ws = new WebSocket(`wss://${window.location.host}/ws`);
+      this.ws.onopen = this.handleWebSocketOpen.bind(this);
+      this.ws.onclose = this.handleWebSocketClose.bind(this);
+      this.ws.onerror = this.handleWebSocketError.bind(this);
+      this.ws.onmessage = this.handleWebSocketMessage.bind(this);
+    };
+    connect();
   }
-  options = options || {};
-  var rnds = options.random || (options.rng || rng)();
-  rnds[6] = rnds[6] & 15 | 64;
-  rnds[8] = rnds[8] & 63 | 128;
-  if (buf) {
-    offset = offset || 0;
-    for (var i2 = 0;i2 < 16; ++i2) {
-      buf[offset + i2] = rnds[i2];
+  handleWebSocketMessage(msg) {
+    if (typeof msg.data === "string") {
+      this.onServerResponse({ loaded: JSON.parse(msg.data) });
+    } else if (typeof msg.data !== "undefined") {
+      this.onServerResponse({ image: msg.data });
     }
-    return buf;
   }
-  return unsafeStringify(rnds);
-};
-var v4_default = v4;
-// src/lib/circularBuffer.ts
-class CircularBuffer {
-  capacity;
-  buffer;
-  pointer;
-  constructor(capacity) {
-    this.capacity = capacity;
-    this.buffer = new Array(capacity);
-    this.pointer = 0;
+  handleWebSocketOpen() {
+    console.log(`[FacePoke] WebSocket connection opened`);
+    this.reconnectAttempts = 0;
+    this.emitEvent("websocketOpen");
   }
-  push(item) {
-    this.buffer[this.pointer] = item;
-    this.pointer = (this.pointer + 1) % this.capacity;
+  handleWebSocketClose(event) {
+    if (event.wasClean) {
+      console.log(`[FacePoke] WebSocket connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+    } else {
+      console.warn(`[FacePoke] WebSocket connection abruptly closed`);
+    }
+    this.emitEvent("websocketClose", event);
+    if (!this.isUnloading && this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      const delay = Math.min(1000 * 2 ** this.reconnectAttempts, 30000);
+      console.log(`[FacePoke] Attempting to reconnect in ${delay}ms (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      setTimeout(() => this.initializeWebSocket(), delay);
+    } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error(`[FacePoke] Max reconnect attempts reached. Please refresh the page.`);
+      this.emitEvent("maxReconnectAttemptsReached");
+    }
   }
-  getAll() {
-    return this.buffer.filter((item) => item !== undefined);
+  handleWebSocketError(error) {
+    console.error(`[FacePoke] WebSocket error:`, error);
+    this.emitEvent("websocketError", error);
+  }
+  cleanup() {
+    console.log("[FacePoke] Starting cleanup process");
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+    this.eventListeners.clear();
+    console.log("[FacePoke] Cleanup completed");
+    this.emitEvent("cleanup");
+  }
+  async loadImage(image) {
+    const base64Data = image.split(",")[1] || image;
+    const buffer = new Uint8Array(atob(base64Data).split("").map((char) => char.charCodeAt(0)));
+    const blob = new Blob([buffer], { type: "application/octet-binary" });
+    this.sendBlobMessage(await blob.arrayBuffer());
+  }
+  transformImage(hash, params) {
+    this.sendJsonMessage({ hash, params });
+  }
+  sendBlobMessage(buffer) {
+    if (!this.ws || this.ws.readyState !== WebSocketState.OPEN) {
+      const error = new Error("WebSocket connection is not open");
+      console.error("[FacePoke] Error sending JSON message:", error);
+      this.emitEvent("sendJsonMessageError", error);
+      throw error;
+    }
+    try {
+      this.ws.send(buffer);
+    } catch (err) {
+      console.error(`failed to send the WebSocket message: ${err}`);
+    }
+  }
+  sendJsonMessage(message) {
+    if (!this.ws || this.ws.readyState !== WebSocketState.OPEN) {
+      const error = new Error("WebSocket connection is not open");
+      console.error("[FacePoke] Error sending JSON message:", error);
+      this.emitEvent("sendJsonMessageError", error);
+      throw error;
+    }
+    try {
+      this.ws.send(JSON.stringify(message));
+    } catch (err) {
+      console.error(`failed to send the WebSocket message: ${err}`);
+    }
+  }
+  setupUnloadHandler() {
+    window.addEventListener("beforeunload", () => {
+      console.log("[FacePoke] Page is unloading, cleaning up resources");
+      this.isUnloading = true;
+      if (this.ws) {
+        this.ws.close(1000, "Page is unloading");
+      }
+      this.cleanup();
+    });
+  }
+  addEventListener(eventType, listener) {
+    if (!this.eventListeners.has(eventType)) {
+      this.eventListeners.set(eventType, new Set);
+    }
+    this.eventListeners.get(eventType).add(listener);
+    console.log(`[FacePoke] Added event listener for '${eventType}'`);
+  }
+  removeEventListener(eventType, listener) {
+    const listeners = this.eventListeners.get(eventType);
+    if (listeners) {
+      listeners.delete(listener);
+      console.log(`[FacePoke] Removed event listener for '${eventType}'`);
+    }
+  }
+  emitEvent(eventType, data) {
+    const listeners = this.eventListeners.get(eventType);
+    if (listeners) {
+      console.log(`[FacePoke] Emitting event '${eventType}' with data:`, data);
+      listeners.forEach((listener) => listener(data));
+    }
   }
 }
+var facePoke = new FacePoke;
 
 // node_modules/zustand/esm/vanilla.mjs
 var createStoreImpl = (createState) => {
@@ -29767,10 +29857,36 @@ var createImpl = (createState) => {
 };
 var create = (createState) => createState ? createImpl(createState) : createImpl;
 
+// src/lib/convertImageToBase64.ts
+async function convertImageToBase64(imageFileOrBlob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader;
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Failed to convert image to base64"));
+      }
+    };
+    reader.onerror = () => {
+      reject(new Error("Error reading file or blob"));
+    };
+    reader.readAsDataURL(imageFileOrBlob);
+  });
+}
+
+// src/lib/mapRange.ts
+var mapRange = (value, inMin, inMax, outMin, outMax) => {
+  return Math.min(outMax, Math.max(outMin, (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin));
+};
+
 // src/hooks/useMainStore.ts
-var useMainStore = create((set, get) => ({
+var getDefaultState = () => ({
+  status: "",
   error: "",
   imageFile: null,
+  isFollowingCursor: false,
+  isGazingAtCursor: false,
   originalImage: "",
   originalImageHash: "",
   previewImage: "",
@@ -29778,9 +29894,54 @@ var useMainStore = create((set, get) => ({
   averageLatency: 190,
   maxLatency: 4000,
   activeLandmark: undefined,
+  metadata: {
+    center: [0, 0],
+    size: 0,
+    bbox: [[0, 0], [0, 0], [0, 0], [0, 0]],
+    angle: 0
+  },
   params: {},
+  faceLandmarks: [],
+  blendShapes: []
+});
+var useMainStore = create((set, get) => ({
+  ...getDefaultState(),
+  setStatus: (status = "") => set({ status }),
   setError: (error = "") => set({ error }),
-  setImageFile: (file) => set({ imageFile: file }),
+  setFaceLandmarks: (faceLandmarks) => {
+    set({ faceLandmarks });
+  },
+  setBlendShapes: (blendShapes) => {
+    set({ blendShapes });
+  },
+  setImageFile: async (file) => {
+    if (!file) {
+      set({
+        ...getDefaultState(),
+        status: "No file selected"
+      });
+      return;
+    }
+    try {
+      const image = await convertImageToBase64(file);
+      set({
+        ...getDefaultState(),
+        imageFile: file,
+        status: `File selected: ${truncateFileName(file.name, 16)}`,
+        previewImage: image,
+        originalImage: image
+      });
+      facePoke.loadImage(image);
+    } catch (err) {
+      console.log(`failed to load the image: `, err);
+      set({
+        ...getDefaultState(),
+        status: "Failed to load the image"
+      });
+    }
+  },
+  setIsFollowingCursor: (isFollowingCursor) => set({ isFollowingCursor }),
+  setIsGazingAtCursor: (isGazingAtCursor) => set({ isGazingAtCursor }),
   setOriginalImage: (url) => set({ originalImage: url }),
   setOriginalImageHash: (originalImageHash) => set({ originalImageHash }),
   setPreviewImage: (url) => set({ previewImage: url }),
@@ -29792,213 +29953,200 @@ var useMainStore = create((set, get) => ({
   },
   setAverageLatency: (averageLatency) => set({ averageLatency }),
   setActiveLandmark: (activeLandmark) => set({ activeLandmark }),
+  setMetadata: (metadata) => set(metadata ? {
+    metadata
+  } : {
+    metadata: getDefaultState().metadata
+  }),
   setParams: (params) => {
     const { params: previousParams } = get();
     set({ params: {
       ...previousParams,
       ...params
     } });
+  },
+  handleServerResponse: async (params) => {
+    const { originalImage, setMetadata, setPreviewImage, setOriginalImageHash, applyModifiedHeadToCanvas, modifyImage } = useMainStore.getState();
+    if (typeof params.error === "string") {
+      console.error(`handleServerResponse: failed to perform the request, resetting the app (${params.error})`);
+      setPreviewImage(originalImage);
+      setOriginalImageHash("");
+    } else if (typeof params.image !== "undefined") {
+      const image = await convertImageToBase64(params.image);
+      setPreviewImage(image);
+    } else if (typeof params.loaded !== "undefined") {
+      setOriginalImageHash(params.loaded.h);
+      setMetadata({
+        center: params.loaded.c,
+        size: params.loaded.s,
+        bbox: params.loaded.b,
+        angle: params.loaded.a
+      });
+      await modifyImage({
+        landmark: {
+          group: "background",
+          distance: 0,
+          vector: { x: 0.5, y: 0.5, z: 0 }
+        },
+        vector: { x: 0, y: 0, z: 0 },
+        mode: "PRIMARY"
+      });
+    } else {
+      console.log(`handleServerResponse: received an unknown json`, params);
+    }
+  },
+  applyModifiedHeadToCanvas: async (headImageBlob) => {
+    return new Promise(async (resolve, reject) => {
+      const originalImg = new Image;
+      const { originalImage, metadata } = useMainStore.getState();
+      originalImg.onload = async () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Failed to get 2D context"));
+          return;
+        }
+        const pixelRatio = window.devicePixelRatio || 1;
+        canvas.width = originalImg.width;
+        canvas.height = originalImg.height;
+        ctx.drawImage(originalImg, 0, 0);
+        const headImageBitmap = await createImageBitmap(headImageBlob, {
+          resizeQuality: "high"
+        });
+        const tempCanvas = document.createElement("canvas");
+        const tempCtx = tempCanvas.getContext("2d");
+        if (!tempCtx) {
+          reject(new Error("Failed to get 2D context for temporary canvas"));
+          return;
+        }
+        tempCanvas.width = headImageBitmap.width;
+        tempCanvas.height = headImageBitmap.height;
+        tempCtx.drawImage(headImageBitmap, 0, 0);
+        const gradientSize = 20;
+        const gradient = tempCtx.createRadialGradient(tempCanvas.width / 2, tempCanvas.height / 2, Math.min(tempCanvas.width, tempCanvas.height) / 2 - gradientSize, tempCanvas.width / 2, tempCanvas.height / 2, Math.min(tempCanvas.width, tempCanvas.height) / 2);
+        gradient.addColorStop(0, "rgba(0, 0, 0, 1)");
+        gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+        tempCtx.globalCompositeOperation = "destination-in";
+        tempCtx.fillStyle = gradient;
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        console.log("metadata:", metadata);
+        ctx.save();
+        ctx.rotate(metadata.angle);
+        ctx.restore();
+        resolve(canvas.toDataURL("image/png"));
+      };
+      originalImg.src = originalImage;
+    });
+  },
+  modifyImage: async ({ landmark, vector, mode }) => {
+    const {
+      originalImage,
+      originalImageHash,
+      params: previousParams,
+      setParams,
+      setError,
+      isFollowingCursor,
+      isGazingAtCursor
+    } = get();
+    if (!originalImage) {
+      console.error("Image file or facePoke not available");
+      return;
+    }
+    const params = {
+      ...previousParams
+    };
+    const generalControl = {
+      minX: -0.3,
+      maxX: 0.3,
+      minY: -0.3,
+      maxY: 0.3
+    };
+    const pupilControl = {
+      minX: -0.5,
+      maxX: 0.5,
+      minY: -0.5,
+      maxY: 0.5
+    };
+    const eyeControl = {
+      minX: -0.5,
+      maxX: 0.5,
+      minY: -0.5,
+      maxY: 0.5
+    };
+    if (isFollowingCursor) {
+      const yawMin = -40;
+      const yawMax = 40;
+      params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
+      const pitchMin = -40;
+      const pitchMax = 40;
+      params.rotate_pitch = mapRange(vector.y, generalControl.minY, generalControl.maxY, pitchMin, pitchMax);
+    }
+    if (isGazingAtCursor) {
+      const pupilsXMin = -15;
+      const pupilsXMax = 15;
+      params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
+      const pupilsYMin = -2;
+      const pupilsYMax = 8;
+      params.pupil_y = mapRange(-vector.y, pupilControl.minY, pupilControl.maxY, pupilsYMin, pupilsYMax);
+    }
+    if (mode !== "HOVERING") {
+      switch (landmark.group) {
+        case "leftEye":
+        case "rightEye":
+          const pupilsXMin = -15;
+          const pupilsXMax = 15;
+          params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
+          const eyesMin = -20;
+          const eyesMax = 5;
+          params.eyes = mapRange(-vector.y, eyeControl.minX, eyeControl.maxX, eyesMin, eyesMax);
+          break;
+        case "leftEyebrow":
+        case "rightEyebrow":
+          const eyebrowMin = -10;
+          const eyebrowMax = 15;
+          params.eyebrow = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, eyebrowMin, eyebrowMax);
+          break;
+        case "lips":
+          const aaaMin = -30;
+          const aaaMax = 120;
+          params.aaa = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, aaaMin, aaaMax);
+          const eeeMin = -20;
+          const eeeMax = 15;
+          params.eee = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, eeeMin, eeeMax);
+          break;
+        case "faceOval":
+          const rollMin = -40;
+          const rollMax = 40;
+          params.rotate_roll = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, rollMin, rollMax);
+          break;
+        case "background":
+          const yawMin = -40;
+          const yawMax = 40;
+          params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
+          const pitchMin = -40;
+          const pitchMax = 40;
+          params.rotate_pitch = mapRange(vector.y, eyeControl.minY, eyeControl.maxY, pitchMin, pitchMax);
+          break;
+        default:
+          return;
+      }
+    }
+    for (const [key, value] of Object.entries(params)) {
+      if (isNaN(value) || !isFinite(value)) {
+        console.log(`${key} is NaN, aborting`);
+        return;
+      }
+    }
+    setParams(params);
+    try {
+      if (originalImageHash) {
+        facePoke.transformImage(originalImageHash, params);
+      }
+    } catch (error) {
+      setError("Failed to modify image");
+    }
   }
 }));
-
-// src/lib/facePoke.ts
-var WebSocketState;
-(function(WebSocketState2) {
-  WebSocketState2[WebSocketState2["CONNECTING"] = 0] = "CONNECTING";
-  WebSocketState2[WebSocketState2["OPEN"] = 1] = "OPEN";
-  WebSocketState2[WebSocketState2["CLOSING"] = 2] = "CLOSING";
-  WebSocketState2[WebSocketState2["CLOSED"] = 3] = "CLOSED";
-})(WebSocketState || (WebSocketState = {}));
-
-class FacePoke {
-  ws = null;
-  connectionId = v4_default();
-  isUnloading = false;
-  onModifiedImage = () => {
-  };
-  reconnectAttempts = 0;
-  maxReconnectAttempts = 5;
-  reconnectDelay = 5000;
-  eventListeners = new Map;
-  requestTracker = new Map;
-  responseTimeBuffer;
-  MAX_TRACKED_TIMES = 5;
-  constructor() {
-    console.log(`[FacePoke] Initializing FacePoke instance with connection ID: ${this.connectionId}`);
-    this.initializeWebSocket();
-    this.setupUnloadHandler();
-    this.responseTimeBuffer = new CircularBuffer(this.MAX_TRACKED_TIMES);
-    console.log(`[FacePoke] Initialized response time tracker with capacity: ${this.MAX_TRACKED_TIMES}`);
-  }
-  trackRequest() {
-    const uuid = v4_default();
-    this.requestTracker.set(uuid, { uuid, timestamp: Date.now() });
-    return uuid;
-  }
-  completeRequest(uuid) {
-    const request = this.requestTracker.get(uuid);
-    if (request) {
-      const responseTime = Date.now() - request.timestamp;
-      this.responseTimeBuffer.push(responseTime);
-      this.requestTracker.delete(uuid);
-      this.updateThrottleTime();
-      console.log(`[FacePoke] Completed request ${uuid}. Response time: ${responseTime}ms`);
-    } else {
-      console.warn(`[FacePoke] Attempted to complete unknown request: ${uuid}`);
-    }
-  }
-  calculateAverageResponseTime() {
-    const times = this.responseTimeBuffer.getAll();
-    const averageLatency = useMainStore.getState().averageLatency;
-    if (times.length === 0)
-      return averageLatency;
-    const sum = times.reduce((acc, time) => acc + time, 0);
-    return sum / times.length;
-  }
-  updateThrottleTime() {
-    const { minLatency, maxLatency, averageLatency, setAverageLatency } = useMainStore.getState();
-    const avgResponseTime = this.calculateAverageResponseTime();
-    const newLatency = Math.min(minLatency, Math.max(minLatency, avgResponseTime));
-    if (newLatency !== averageLatency) {
-      setAverageLatency(newLatency);
-      console.log(`[FacePoke] Updated throttle time (latency is ${newLatency}ms)`);
-    }
-  }
-  setOnModifiedImage(handler) {
-    this.onModifiedImage = handler;
-    console.log(`[FacePoke] onModifiedImage handler set`);
-  }
-  async startWebSocket() {
-    console.log(`[FacePoke] Starting WebSocket connection.`);
-    if (!this.ws || this.ws.readyState !== WebSocketState.OPEN) {
-      await this.initializeWebSocket();
-    }
-  }
-  async initializeWebSocket() {
-    console.log(`[FacePoke][${this.connectionId}] Initializing WebSocket connection`);
-    const connect = () => {
-      this.ws = new WebSocket(`wss://${window.location.host}/ws`);
-      this.ws.onopen = this.handleWebSocketOpen.bind(this);
-      this.ws.onmessage = this.handleWebSocketMessage.bind(this);
-      this.ws.onclose = this.handleWebSocketClose.bind(this);
-      this.ws.onerror = this.handleWebSocketError.bind(this);
-    };
-    connect();
-  }
-  handleWebSocketOpen() {
-    console.log(`[FacePoke][${this.connectionId}] WebSocket connection opened`);
-    this.reconnectAttempts = 0;
-    this.emitEvent("websocketOpen");
-  }
-  handleWebSocketMessage(event) {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.uuid) {
-        this.completeRequest(data.uuid);
-      }
-      if (data.type === "modified_image") {
-        if (data?.image) {
-          this.onModifiedImage(data.image, data.image_hash);
-        }
-      }
-      this.emitEvent("message", data);
-    } catch (error) {
-      console.error(`[FacePoke][${this.connectionId}] Error parsing WebSocket message:`, error);
-    }
-  }
-  handleWebSocketClose(event) {
-    if (event.wasClean) {
-      console.log(`[FacePoke][${this.connectionId}] WebSocket connection closed cleanly, code=${event.code}, reason=${event.reason}`);
-    } else {
-      console.warn(`[FacePoke][${this.connectionId}] WebSocket connection abruptly closed`);
-    }
-    this.emitEvent("websocketClose", event);
-    if (!this.isUnloading && this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      const delay = Math.min(1000 * 2 ** this.reconnectAttempts, 30000);
-      console.log(`[FacePoke][${this.connectionId}] Attempting to reconnect in ${delay}ms (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-      setTimeout(() => this.initializeWebSocket(), delay);
-    } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error(`[FacePoke][${this.connectionId}] Max reconnect attempts reached. Please refresh the page.`);
-      this.emitEvent("maxReconnectAttemptsReached");
-    }
-  }
-  handleWebSocketError(error) {
-    console.error(`[FacePoke][${this.connectionId}] WebSocket error:`, error);
-    this.emitEvent("websocketError", error);
-  }
-  cleanup() {
-    console.log("[FacePoke] Starting cleanup process");
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-    this.eventListeners.clear();
-    console.log("[FacePoke] Cleanup completed");
-    this.emitEvent("cleanup");
-  }
-  modifyImage(image, imageHash, params) {
-    try {
-      const message = {
-        type: "modify_image",
-        params
-      };
-      if (image) {
-        message.image = image;
-      } else if (imageHash) {
-        message.image_hash = imageHash;
-      } else {
-        throw new Error("Either image or imageHash must be provided");
-      }
-      this.sendJsonMessage(message);
-    } catch (err) {
-      console.error(`[FacePoke] Failed to modify the image:`, err);
-    }
-  }
-  sendJsonMessage(message) {
-    if (!this.ws || this.ws.readyState !== WebSocketState.OPEN) {
-      const error = new Error("WebSocket connection is not open");
-      console.error("[FacePoke] Error sending JSON message:", error);
-      this.emitEvent("sendJsonMessageError", error);
-      throw error;
-    }
-    const uuid = this.trackRequest();
-    const messageWithUuid = { ...message, uuid };
-    this.ws.send(JSON.stringify(messageWithUuid));
-  }
-  setupUnloadHandler() {
-    window.addEventListener("beforeunload", () => {
-      console.log("[FacePoke] Page is unloading, cleaning up resources");
-      this.isUnloading = true;
-      if (this.ws) {
-        this.ws.close(1000, "Page is unloading");
-      }
-      this.cleanup();
-    });
-  }
-  addEventListener(eventType, listener) {
-    if (!this.eventListeners.has(eventType)) {
-      this.eventListeners.set(eventType, new Set);
-    }
-    this.eventListeners.get(eventType).add(listener);
-    console.log(`[FacePoke] Added event listener for '${eventType}'`);
-  }
-  removeEventListener(eventType, listener) {
-    const listeners = this.eventListeners.get(eventType);
-    if (listeners) {
-      listeners.delete(listener);
-      console.log(`[FacePoke] Removed event listener for '${eventType}'`);
-    }
-  }
-  emitEvent(eventType, data) {
-    const listeners = this.eventListeners.get(eventType);
-    if (listeners) {
-      console.log(`[FacePoke] Emitting event '${eventType}' with data:`, data);
-      listeners.forEach((listener) => listener(data));
-    }
-  }
-}
-var facePoke = new FacePoke;
 
 // node_modules/beautiful-react-hooks/esm/useThrottledCallback.js
 var import_react6 = __toESM(require_react(), 1);
@@ -32818,34 +32966,20 @@ var FACEMESH_TESSELATION = Object.freeze(new Set([
 
 // src/hooks/useFaceLandmarkDetection.tsx
 function useFaceLandmarkDetection() {
-  const error = useMainStore((s2) => s2.error);
   const setError = useMainStore((s2) => s2.setError);
-  const imageFile = useMainStore((s2) => s2.imageFile);
-  const setImageFile = useMainStore((s2) => s2.setImageFile);
-  const originalImage = useMainStore((s2) => s2.originalImage);
-  const originalImageHash = useMainStore((s2) => s2.originalImageHash);
-  const setOriginalImageHash = useMainStore((s2) => s2.setOriginalImageHash);
   const previewImage = useMainStore((s2) => s2.previewImage);
-  const setPreviewImage = useMainStore((s2) => s2.setPreviewImage);
-  const resetImage = useMainStore((s2) => s2.resetImage);
-  window.debugJuju = useMainStore;
-  const averageLatency = 220;
-  const [faceLandmarks, setFaceLandmarks] = import_react7.useState([]);
+  const handleServerResponse = useMainStore((s2) => s2.handleServerResponse);
+  const faceLandmarks = useMainStore((s2) => s2.faceLandmarks);
+  const throttleInMs = 180;
   const [isMediaPipeReady, setIsMediaPipeReady] = import_react7.useState(false);
   const [isDrawingUtilsReady, setIsDrawingUtilsReady] = import_react7.useState(false);
-  const [blendShapes, setBlendShapes] = import_react7.useState([]);
   const [dragStart, setDragStart] = import_react7.useState(null);
-  const [dragEnd, setDragEnd] = import_react7.useState(null);
   const [isDragging, setIsDragging] = import_react7.useState(false);
-  const [isWaitingForResponse, setIsWaitingForResponse] = import_react7.useState(false);
   const dragStartRef = import_react7.useRef(null);
-  const currentMousePosRef = import_react7.useRef(null);
-  const lastModifiedImageHashRef = import_react7.useRef(null);
   const [currentLandmark, setCurrentLandmark] = import_react7.useState(null);
   const [previousLandmark, setPreviousLandmark] = import_react7.useState(null);
   const [currentOpacity, setCurrentOpacity] = import_react7.useState(0);
   const [previousOpacity, setPreviousOpacity] = import_react7.useState(0);
-  const [isHovering, setIsHovering] = import_react7.useState(false);
   const canvasRef = import_react7.useRef(null);
   const mediaPipeRef = import_react7.useRef({
     faceLandmarker: null,
@@ -32882,8 +33016,8 @@ function useFaceLandmarkDetection() {
         } else {
           faceLandmarker.close();
         }
-      } catch (error2) {
-        console.error("Error during MediaPipe initialization:", error2);
+      } catch (error) {
+        console.error("Error during MediaPipe initialization:", error);
         setError("Failed to initialize face detection. Please try refreshing the page.");
       }
     };
@@ -32969,6 +33103,7 @@ function useFaceLandmarkDetection() {
     }
   }, [landmarkCenters]);
   const detectFaceLandmarks = import_react7.useCallback(async (imageDataUrl) => {
+    const { setFaceLandmarks, setBlendShapes } = useMainStore.getState();
     if (!isMediaPipeReady) {
       console.log("MediaPipe not ready. Skipping detection.");
       return;
@@ -33068,200 +33203,137 @@ function useFaceLandmarkDetection() {
     }
     detectFaceLandmarks(previewImage);
   }, [isMediaPipeReady, isDrawingUtilsReady, previewImage]);
-  const modifyImage = import_react7.useCallback(({ landmark, vector }) => {
-    const {
-      originalImage: originalImage2,
-      originalImageHash: originalImageHash2,
-      params: previousParams,
-      setParams,
-      setError: setError2
-    } = useMainStore.getState();
-    if (!originalImage2) {
-      console.error("Image file or facePoke not available");
-      return;
-    }
-    const params = {
-      ...previousParams
-    };
-    const minX = -0.5;
-    const maxX = 0.5;
-    const minY = -0.5;
-    const maxY = 0.5;
-    const mapRange = (value, inMin, inMax, outMin, outMax) => {
-      return Math.min(outMax, Math.max(outMin, (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin));
-    };
-    console.log("modifyImage:", {
-      originalImage: originalImage2,
-      originalImageHash: originalImageHash2,
-      landmark,
-      vector,
-      minX,
-      maxX,
-      minY,
-      maxY
-    });
-    switch (landmark.group) {
-      case "leftEye":
-      case "rightEye":
-        const eyesMin = -20;
-        const eyesMax = 5;
-        params.eyes = mapRange(-vector.y, minX, maxX, eyesMin, eyesMax);
-        break;
-      case "leftEyebrow":
-      case "rightEyebrow":
-        const eyebrowMin = -10;
-        const eyebrowMax = 15;
-        params.eyebrow = mapRange(-vector.y, minY, maxY, eyebrowMin, eyebrowMax);
-        break;
-      case "lips":
-        const eeeMin = -20;
-        const eeeMax = 15;
-        params.eee = mapRange(-vector.y, minY, maxY, eeeMin, eeeMax);
-        const wooMin = -20;
-        const wooMax = 15;
-        params.woo = mapRange(-vector.x, minX, maxX, wooMin, wooMax);
-        break;
-      case "faceOval":
-        const rollMin = -40;
-        const rollMax = 40;
-        params.rotate_roll = mapRange(vector.x, minX, maxX, rollMin, rollMax);
-        break;
-      case "background":
-        const yawMin = -40;
-        const yawMax = 40;
-        params.rotate_yaw = mapRange(-vector.x, minX, maxX, yawMin, yawMax);
-        const pitchMin = -40;
-        const pitchMax = 40;
-        params.rotate_pitch = mapRange(vector.y, minY, maxY, pitchMin, pitchMax);
-        break;
-      default:
-        return;
-    }
-    for (const [key, value] of Object.entries(params)) {
-      if (isNaN(value) || !isFinite(value)) {
-        console.log(`${key} is NaN, aborting`);
-        return;
-      }
-    }
-    console.log(`PITCH=${params.rotate_pitch || 0}, YAW=${params.rotate_yaw || 0}, ROLL=${params.rotate_roll || 0}`);
-    setParams(params);
-    try {
-      if (!lastModifiedImageHashRef.current || lastModifiedImageHashRef.current !== originalImageHash2) {
-        lastModifiedImageHashRef.current = originalImageHash2;
-        facePoke.modifyImage(originalImage2, null, params);
-      } else {
-        facePoke.modifyImage(null, lastModifiedImageHashRef.current, params);
-      }
-    } catch (error2) {
-      setError2("Failed to modify image");
-    }
-  }, []);
   const modifyImageWithRateLimit = useThrottledCallback_default((params) => {
-    modifyImage(params);
-  }, [modifyImage], averageLatency);
-  const handleMouseEnter = import_react7.useCallback(() => {
-    setIsHovering(true);
-  }, []);
-  const handleMouseLeave = import_react7.useCallback(() => {
-    setIsHovering(false);
-  }, []);
-  const handleMouseDown = import_react7.useCallback((event) => {
+    useMainStore.getState().modifyImage(params);
+  }, [], throttleInMs);
+  import_react7.useEffect(() => {
+    facePoke.setOnServerResponse(handleServerResponse);
+  }, [handleServerResponse]);
+  const handleStart = import_react7.useCallback((x2, y2, mode) => {
     if (!canvasRef.current)
       return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x2 = (event.clientX - rect.left) / rect.width;
-    const y2 = (event.clientY - rect.top) / rect.height;
-    const landmark = findClosestLandmark(x2, y2);
-    console.log(`Mouse down on ${landmark.group}`);
+    const normalizedX = (x2 - rect.left) / rect.width;
+    const normalizedY = (y2 - rect.top) / rect.height;
+    const landmark = findClosestLandmark(normalizedX, normalizedY);
     setActiveLandmark(landmark);
-    setDragStart({ x: x2, y: y2 });
-    dragStartRef.current = { x: x2, y: y2 };
+    setDragStart({ x: normalizedX, y: normalizedY });
+    dragStartRef.current = { x: normalizedX, y: normalizedY };
   }, [findClosestLandmark, setActiveLandmark, setDragStart]);
-  const handleMouseMove = import_react7.useCallback((event) => {
+  const handleMove = import_react7.useCallback((x2, y2, mode) => {
     if (!canvasRef.current)
       return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x2 = (event.clientX - rect.left) / rect.width;
-    const y2 = (event.clientY - rect.top) / rect.height;
+    const normalizedX = (x2 - rect.left) / rect.width;
+    const normalizedY = (y2 - rect.top) / rect.height;
+    const landmark = findClosestLandmark(normalizedX, normalizedY, dragStart && dragStartRef.current ? currentLandmark?.group : undefined);
+    const landmarkData = landmarkCenters[landmark?.group];
+    const vector = landmarkData ? {
+      x: normalizedX - landmarkData.x,
+      y: normalizedY - landmarkData.y,
+      z: 0
+    } : {
+      x: 0.5,
+      y: 0.5,
+      z: 0
+    };
     if (dragStart && dragStartRef.current) {
-      const landmark = findClosestLandmark(x2, y2, currentLandmark?.group);
-      console.log(`Dragging mouse (was over ${currentLandmark?.group || "nothing"}, now over ${landmark.group})`);
+      setIsDragging(true);
       modifyImageWithRateLimit({
         landmark: currentLandmark || landmark,
-        vector: {
-          x: x2 - landmarkCenters[landmark.group].x,
-          y: y2 - landmarkCenters[landmark.group].y,
-          z: 0
-        }
+        vector,
+        mode
       });
-      setIsDragging(true);
     } else {
-      const landmark = findClosestLandmark(x2, y2);
       if (!currentLandmark || currentLandmark?.group !== landmark?.group) {
         setActiveLandmark(landmark);
       }
-      setIsHovering(true);
+      modifyImageWithRateLimit({
+        landmark,
+        vector,
+        mode: "HOVERING"
+      });
     }
-  }, [currentLandmark, dragStart, setIsHovering, setActiveLandmark, setIsDragging, modifyImageWithRateLimit, landmarkCenters]);
-  const handleMouseUp = import_react7.useCallback((event) => {
+  }, [currentLandmark, dragStart, setActiveLandmark, setIsDragging, modifyImageWithRateLimit, landmarkCenters]);
+  const handleEnd = import_react7.useCallback((x2, y2, mode) => {
     if (!canvasRef.current)
       return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x2 = (event.clientX - rect.left) / rect.width;
-    const y2 = (event.clientY - rect.top) / rect.height;
+    const normalizedX = (x2 - rect.left) / rect.width;
+    const normalizedY = (y2 - rect.top) / rect.height;
     if (dragStart && dragStartRef.current) {
-      const landmark = findClosestLandmark(x2, y2, currentLandmark?.group);
-      console.log(`Mouse up (was over ${currentLandmark?.group || "nothing"}, now over ${landmark.group})`);
+      const landmark = findClosestLandmark(normalizedX, normalizedY, currentLandmark?.group);
       modifyImageWithRateLimit({
         landmark: currentLandmark || landmark,
         vector: {
-          x: x2 - landmarkCenters[landmark.group].x,
-          y: y2 - landmarkCenters[landmark.group].y,
+          x: normalizedX - landmarkCenters[landmark.group].x,
+          y: normalizedY - landmarkCenters[landmark.group].y,
           z: 0
-        }
+        },
+        mode
       });
     }
     setIsDragging(false);
     dragStartRef.current = null;
     setActiveLandmark(undefined);
-  }, [currentLandmark, isDragging, modifyImageWithRateLimit, findClosestLandmark, setActiveLandmark, landmarkCenters, modifyImageWithRateLimit, setIsDragging]);
-  import_react7.useEffect(() => {
-    facePoke.setOnModifiedImage((image, image_hash) => {
-      if (image) {
-        setPreviewImage(image);
-      }
-      setOriginalImageHash(image_hash);
-      lastModifiedImageHashRef.current = image_hash;
-    });
-  }, [setPreviewImage, setOriginalImageHash]);
+  }, [currentLandmark, isDragging, modifyImageWithRateLimit, findClosestLandmark, setActiveLandmark, landmarkCenters, setIsDragging]);
+  const handleMouseDown = import_react7.useCallback((event) => {
+    const mode = event.button === 0 ? "PRIMARY" : "SECONDARY";
+    handleStart(event.clientX, event.clientY, mode);
+  }, [handleStart]);
+  const handleMouseMove = import_react7.useCallback((event) => {
+    const mode = event.buttons === 1 ? "PRIMARY" : "SECONDARY";
+    handleMove(event.clientX, event.clientY, mode);
+  }, [handleMove]);
+  const handleMouseUp = import_react7.useCallback((event) => {
+    const mode = event.buttons === 1 ? "PRIMARY" : "SECONDARY";
+    handleEnd(event.clientX, event.clientY, mode);
+  }, [handleEnd]);
+  const handleTouchStart = import_react7.useCallback((event) => {
+    const mode = event.touches.length === 1 ? "PRIMARY" : "SECONDARY";
+    const touch = event.touches[0];
+    handleStart(touch.clientX, touch.clientY, mode);
+  }, [handleStart]);
+  const handleTouchMove = import_react7.useCallback((event) => {
+    const mode = event.touches.length === 1 ? "PRIMARY" : "SECONDARY";
+    const touch = event.touches[0];
+    handleMove(touch.clientX, touch.clientY, mode);
+  }, [handleMove]);
+  const handleTouchEnd = import_react7.useCallback((event) => {
+    const mode = event.changedTouches.length === 1 ? "PRIMARY" : "SECONDARY";
+    const touch = event.changedTouches[0];
+    handleEnd(touch.clientX, touch.clientY, mode);
+  }, [handleEnd]);
   return {
     canvasRef,
     canvasRefCallback,
     mediaPipeRef,
-    faceLandmarks,
     isMediaPipeReady,
     isDrawingUtilsReady,
-    blendShapes,
-    setFaceLandmarks,
-    setBlendShapes,
     handleMouseDown,
     handleMouseUp,
     handleMouseMove,
-    handleMouseEnter,
-    handleMouseLeave,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     currentLandmark,
     currentOpacity
   };
 }
 
-// src/components/PoweredBy.tsx
+// src/components/About.tsx
 var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
-function PoweredBy() {
+function About() {
   return jsx_dev_runtime2.jsxDEV("div", {
     className: "flex flex-row items-center justify-center font-sans mt-4 w-full",
     children: [
       jsx_dev_runtime2.jsxDEV("span", {
-        className: "mr-1",
+        className: "text-neutral-900 text-sm",
+        style: { textShadow: "rgb(255 255 255 / 80%) 0px 0px 2px" },
+        children: "Click and drag on the image."
+      }, undefined, false, undefined, this),
+      jsx_dev_runtime2.jsxDEV("span", {
+        className: "ml-2 mr-1",
         children: jsx_dev_runtime2.jsxDEV("img", {
           src: "/hf-logo.svg",
           alt: "Hugging Face",
@@ -33297,7 +33369,6 @@ function Spinner() {
 // src/hooks/useFacePokeAPI.ts
 var import_react8 = __toESM(require_react(), 1);
 function useFacePokeAPI() {
-  const [status, setStatus] = import_react8.useState("");
   const [isDebugMode, setIsDebugMode] = import_react8.useState(false);
   const [interruptMessage, setInterruptMessage] = import_react8.useState(null);
   const [isLoading, setIsLoading] = import_react8.useState(false);
@@ -33316,8 +33387,6 @@ function useFacePokeAPI() {
   }, []);
   return {
     facePoke,
-    status,
-    setStatus,
     isDebugMode,
     setIsDebugMode,
     interruptMessage,
@@ -33335,29 +33404,11 @@ function Layout({ children }) {
     children: jsx_dev_runtime4.jsxDEV("div", {
       className: "min-h-screen w-full py-8 flex flex-col justify-center",
       children: jsx_dev_runtime4.jsxDEV("div", {
-        className: "relative p-4 sm:max-w-5xl sm:mx-auto",
+        className: "flex flex-col items-center justify-center p-4 sm:max-w-5xl sm:mx-auto",
         children
       }, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
   }, undefined, false, undefined, this);
-}
-
-// src/lib/convertImageToBase64.ts
-async function convertImageToBase64(imageFile) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader;
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Failed to convert image to base64"));
-      }
-    };
-    reader.onerror = () => {
-      reject(new Error("Error reading file"));
-    };
-    reader.readAsDataURL(imageFile);
-  });
 }
 
 // src/app.tsx
@@ -33367,66 +33418,34 @@ function App() {
   const setError = useMainStore((s2) => s2.setError);
   const imageFile = useMainStore((s2) => s2.imageFile);
   const setImageFile = useMainStore((s2) => s2.setImageFile);
-  const originalImage = useMainStore((s2) => s2.originalImage);
-  const setOriginalImage = useMainStore((s2) => s2.setOriginalImage);
+  const isGazingAtCursor = useMainStore((s2) => s2.isGazingAtCursor);
+  const setIsGazingAtCursor = useMainStore((s2) => s2.setIsGazingAtCursor);
+  const isFollowingCursor = useMainStore((s2) => s2.isFollowingCursor);
+  const setIsFollowingCursor = useMainStore((s2) => s2.setIsFollowingCursor);
   const previewImage = useMainStore((s2) => s2.previewImage);
-  const setPreviewImage = useMainStore((s2) => s2.setPreviewImage);
-  const resetImage = useMainStore((s2) => s2.resetImage);
-  const setOriginalImageHash = useMainStore((s2) => s2.setOriginalImageHash);
+  const status = useMainStore((s2) => s2.status);
+  const blendShapes = useMainStore((s2) => s2.blendShapes);
   const {
-    status,
-    setStatus,
     isDebugMode,
     setIsDebugMode,
     interruptMessage
   } = useFacePokeAPI();
   const {
-    canvasRef,
     canvasRefCallback,
-    mediaPipeRef,
-    faceLandmarks,
     isMediaPipeReady,
-    blendShapes,
-    setFaceLandmarks,
-    setBlendShapes,
     handleMouseDown,
     handleMouseUp,
     handleMouseMove,
-    handleMouseEnter,
-    handleMouseLeave,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     currentOpacity
   } = useFaceLandmarkDetection();
   const videoRef = import_react9.useRef(null);
-  const handleFileChange = import_react9.useCallback(async (event) => {
+  const handleFileChange = import_react9.useCallback((event) => {
     const files = event.target.files;
-    if (files && files[0]) {
-      setImageFile(files[0]);
-      setStatus(`File selected: ${truncateFileName(files[0].name, 16)}`);
-      try {
-        const image = await convertImageToBase64(files[0]);
-        setPreviewImage(image);
-        setOriginalImage(image);
-        setOriginalImageHash("");
-      } catch (err) {
-        console.log(`failed to convert the image: `, err);
-        setImageFile(null);
-        setStatus("");
-        setPreviewImage("");
-        setOriginalImage("");
-        setOriginalImageHash("");
-        setFaceLandmarks([]);
-        setBlendShapes([]);
-      }
-    } else {
-      setImageFile(null);
-      setStatus("");
-      setPreviewImage("");
-      setOriginalImage("");
-      setOriginalImageHash("");
-      setFaceLandmarks([]);
-      setBlendShapes([]);
-    }
-  }, [isMediaPipeReady, setImageFile, setPreviewImage, setOriginalImage, setOriginalImageHash, setFaceLandmarks, setBlendShapes, setStatus]);
+    setImageFile(files?.[0] || undefined);
+  }, [setImageFile]);
   const handleDownload = import_react9.useCallback(() => {
     if (previewImage) {
       const link = document.createElement("a");
@@ -33503,7 +33522,7 @@ function App() {
                 className: "flex items-center space-x-2",
                 children: [
                   jsx_dev_runtime5.jsxDEV("div", {
-                    className: "relative",
+                    className: "flex items-center justify-center",
                     children: [
                       jsx_dev_runtime5.jsxDEV("input", {
                         id: "imageInput",
@@ -33518,7 +33537,7 @@ function App() {
                         className: `cursor-pointer inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white ${isMediaPipeReady ? "bg-slate-600 hover:bg-slate-500" : "bg-slate-500 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`,
                         children: [
                           jsx_dev_runtime5.jsxDEV(Spinner, {}, undefined, false, undefined, this),
-                          imageFile ? truncateFileName(imageFile.name, 32) : isMediaPipeReady ? "Choose a portrait photo (.jpg, .png, .webp)" : "Initializing..."
+                          imageFile ? truncateFileName(imageFile.name, 32) : isMediaPipeReady ? "Choose a portrait photo" : "Initializing..."
                         ]
                       }, undefined, true, undefined, this)
                     ]
@@ -33535,18 +33554,21 @@ function App() {
                   }, undefined, true, undefined, this)
                 ]
               }, undefined, true, undefined, this),
-              previewImage && jsx_dev_runtime5.jsxDEV("label", {
-                className: "mt-4 flex items-center",
-                children: [
-                  jsx_dev_runtime5.jsxDEV("input", {
-                    type: "checkbox",
-                    checked: isDebugMode,
-                    onChange: (e2) => setIsDebugMode(e2.target.checked),
-                    className: "mr-2"
-                  }, undefined, false, undefined, this),
-                  "Show face landmarks on hover"
-                ]
-              }, undefined, true, undefined, this)
+              previewImage && jsx_dev_runtime5.jsxDEV("div", {
+                className: "flex items-center space-x-2",
+                children: jsx_dev_runtime5.jsxDEV("label", {
+                  className: "mt-4 flex items-center",
+                  children: [
+                    jsx_dev_runtime5.jsxDEV("input", {
+                      type: "checkbox",
+                      checked: isDebugMode,
+                      onChange: (e2) => setIsDebugMode(e2.target.checked),
+                      className: "mr-2"
+                    }, undefined, false, undefined, this),
+                    "Show face markers"
+                  ]
+                }, undefined, true, undefined, this)
+              }, undefined, false, undefined, this)
             ]
           }, undefined, true, undefined, this),
           previewImage && jsx_dev_runtime5.jsxDEV("div", {
@@ -33560,11 +33582,12 @@ function App() {
               jsx_dev_runtime5.jsxDEV("canvas", {
                 ref: canvasRefCallback,
                 className: "absolute top-0 left-0 w-full h-full select-none",
-                onMouseEnter: handleMouseEnter,
-                onMouseLeave: handleMouseLeave,
                 onMouseDown: handleMouseDown,
                 onMouseUp: handleMouseUp,
                 onMouseMove: handleMouseMove,
+                onTouchStart: handleTouchStart,
+                onTouchMove: handleTouchMove,
+                onTouchEnd: handleTouchEnd,
                 style: {
                   position: "absolute",
                   top: 0,
@@ -33580,7 +33603,7 @@ function App() {
           canDisplayBlendShapes && displayBlendShapes
         ]
       }, undefined, true, undefined, this),
-      jsx_dev_runtime5.jsxDEV(PoweredBy, {}, undefined, false, undefined, this)
+      jsx_dev_runtime5.jsxDEV(About, {}, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
 }
