@@ -135,8 +135,8 @@ export class FacePoke {
     this.sendBlobMessage(await blob.arrayBuffer());
   }
 
-  public transformImage(hash: string, params: Partial<ImageModificationParams>): void {
-    this.sendJsonMessage({ hash, params });
+  public transformImage(uuid: string, params: Partial<ImageModificationParams>): void {
+    this.sendJsonMessage({ uuid, params });
   }
 
   private sendBlobMessage(buffer: ArrayBuffer): void {

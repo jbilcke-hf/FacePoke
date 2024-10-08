@@ -1,3 +1,4 @@
+import uuid
 import logging
 import hashlib
 import os
@@ -61,37 +62,10 @@ class Engine:
 
         logger.info("✅ FacePoke Engine initialized successfully.")
 
-    async def get_image_hash(self, image: Union[Image.Image, str, bytes]) -> str:
-        """
-        Compute or retrieve the hash for an image.
-
-        Args:
-            image (Union[Image.Image, str, bytes]): The input image, either as a PIL Image,
-                base64 string, or bytes.
-
-        Returns:
-            str: The computed hash of the image.
-        """
-        if isinstance(image, str):
-            # Assume it's already a hash if it's a string of the right length
-            if len(image) == 32:
-                return image
-            # Otherwise, assume it's a base64 string
-            image = base64_data_uri_to_PIL_Image(image)
-
-        if isinstance(image, Image.Image):
-            return hashlib.md5(image.tobytes()).hexdigest()
-        elif isinstance(image, bytes):
-            return hashlib.md5(image).hexdigest()
-        else:
-            raise ValueError("Unsupported image type")
-
     @alru_cache(maxsize=512)
     async def load_image(self, data):
         image = Image.open(io.BytesIO(data))
-
-        image_hash = await self.get_image_hash(image)
-
+        uuid = uuid.uuid4()
         img_rgb = np.array(image)
 
         inference_cfg = self.live_portrait.live_portrait_wrapper.cfg
@@ -113,13 +87,13 @@ class Engine:
             'inference_cfg': inference_cfg
         }
 
-        self.processed_cache[image_hash] = processed_data
+        self.processed_cache[uuid] = processed_data
 
         # Calculate the bounding box
         bbox_info = parse_bbox_from_landmark(processed_data['crop_info']['lmk_crop'], scale=1.0)
 
         return {
-            'h': image_hash,
+            'u': uuid,
 
             # those aren't easy to serialize
             'c': bbox_info['center'], # 2x1
@@ -129,12 +103,12 @@ class Engine:
             # 'bbox_rot': bbox_info['bbox_rot'].toList(),  # 4x2
         }
 
-    async def transform_image(self, image_hash: str, params: Dict[str, float]) -> bytes:
+    async def transform_image(self, uuid: str, params: Dict[str, float]) -> bytes:
         # If we don't have the image in cache yet, add it
-        if image_hash not in self.processed_cache:
+        if uuid not in self.processed_cache:
             raise ValueError("cache miss")
 
-        processed_data = self.processed_cache[image_hash]
+        processed_data = self.processed_cache[uuid]
 
         try:
             # Apply modifications based on params

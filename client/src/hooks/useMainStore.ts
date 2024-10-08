@@ -18,7 +18,7 @@ export type ImageState = ImageStateValues & {
   setIsFollowingCursor: (isFollowingCursor: boolean) => void
   setIsGazingAtCursor: (isGazingAtCursor: boolean) => void
   setOriginalImage: (url: string) => void
-  setOriginalImageHash: (hash: string) => void
+  setOriginalImageUuid: (uuid: string) => void
   setPreviewImage: (url: string) => void
   resetImage: () => void
   setAverageLatency: (averageLatency: number) => void
@@ -41,7 +41,7 @@ export const getDefaultState = (): ImageStateValues => ({
   isFollowingCursor: false,
   isGazingAtCursor: false,
   originalImage: '',
-  originalImageHash: '',
+  originalImageUuid: '',
   previewImage: '',
   minLatency: 20, // min time between requests
   averageLatency: 190, // this should be the average for most people
@@ -98,7 +98,7 @@ export const useMainStore = create<ImageState>((set, get) => ({
   setIsFollowingCursor: (isFollowingCursor: boolean) => set({ isFollowingCursor }),
   setIsGazingAtCursor: (isGazingAtCursor: boolean) => set({ isGazingAtCursor }),
   setOriginalImage: (url) => set({ originalImage: url }),
-  setOriginalImageHash: (originalImageHash) => set({ originalImageHash }),
+  setOriginalImageUuid: (originalImageUuid) => set({ originalImageUuid }),
   setPreviewImage: (url) => set({ previewImage: url }),
   resetImage: () => {
     const { originalImage } = get()
@@ -121,11 +121,11 @@ export const useMainStore = create<ImageState>((set, get) => ({
     }})
   },
   handleServerResponse: async (params: OnServerResponseParams) => {
-    const { originalImage, setMetadata, setPreviewImage, setOriginalImageHash, applyModifiedHeadToCanvas, modifyImage } = useMainStore.getState();
+    const { originalImage, setMetadata, setPreviewImage, setOriginalImageUuid, applyModifiedHeadToCanvas, modifyImage } = useMainStore.getState();
     if (typeof params.error === "string") {
       console.error(`handleServerResponse: failed to perform the request, resetting the app (${params.error})`)
       setPreviewImage(originalImage)
-      setOriginalImageHash('')
+      setOriginalImageUuid('')
     } else if (typeof params.image !== "undefined") {
 
       // this is where we decide to paste back the image as a whole,
@@ -141,7 +141,7 @@ export const useMainStore = create<ImageState>((set, get) => ({
       setPreviewImage(image);
     } else if (typeof params.loaded !== "undefined") {
       //console.log(`handleServerResponse: received a json`, params)
-      setOriginalImageHash(params.loaded.h)
+      setOriginalImageUuid(params.loaded.u)
       setMetadata({
         center: params.loaded.c, // center - 2x1
         size: params.loaded.s, // size - scalar
@@ -149,7 +149,7 @@ export const useMainStore = create<ImageState>((set, get) => ({
         angle: params.loaded.a,  //angle - rad, counterclockwise
       })
 
-      // right after we received the hash, we perform a first blank request
+      // right after we received the id, we perform a first blank request
       await modifyImage({
         landmark: {
           group: 'background',
@@ -264,7 +264,7 @@ export const useMainStore = create<ImageState>((set, get) => ({
 
     const {
       originalImage,
-      originalImageHash,
+      originalImageUuid,
       params: previousParams,
       setParams,
       setError,
@@ -424,8 +424,8 @@ export const useMainStore = create<ImageState>((set, get) => ({
 
     try {
 
-      if (originalImageHash) {
-        facePoke.transformImage(originalImageHash, params);
+      if (originalImageUuid) {
+        facePoke.transformImage(originalImageUuid, params);
       }
 
     } catch (error) {

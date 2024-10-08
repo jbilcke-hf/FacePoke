@@ -30,7 +30,7 @@ export interface Metadata {
  */
 export interface ModifyImageMessage {
   image?: string;
-  hash?: string;
+  uuid?: string;
   params: Partial<ImageModificationParams>;
 }
 
@@ -38,7 +38,7 @@ export type OnServerResponseParams = {
   image?: Blob
   error?: string
   loaded?: {
-    h: string
+    i: string
   } & {
     c: number[] //center - 2x1
     s: number // size - scalar
@@ -80,7 +80,7 @@ export interface ImageStateValues {
   isGazingAtCursor: boolean
   originalImage: string
   previewImage: string
-  originalImageHash: string
+  originalImageUuid: string
   minLatency: number
   averageLatency: number
   maxLatency: number

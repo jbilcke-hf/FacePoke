@@ -29754,8 +29754,8 @@ class FacePoke {
     const blob = new Blob([buffer], { type: "application/octet-binary" });
     this.sendBlobMessage(await blob.arrayBuffer());
   }
-  transformImage(hash, params) {
-    this.sendJsonMessage({ hash, params });
+  transformImage(uuid, params) {
+    this.sendJsonMessage({ uuid, params });
   }
   sendBlobMessage(buffer) {
     if (!this.ws || this.ws.readyState !== WebSocketState.OPEN) {
@@ -29888,7 +29888,7 @@ var getDefaultState = () => ({
   isFollowingCursor: false,
   isGazingAtCursor: false,
   originalImage: "",
-  originalImageHash: "",
+  originalImageUuid: "",
   previewImage: "",
   minLatency: 20,
   averageLatency: 190,
@@ -29943,7 +29943,7 @@ var useMainStore = create((set, get) => ({
   setIsFollowingCursor: (isFollowingCursor) => set({ isFollowingCursor }),
   setIsGazingAtCursor: (isGazingAtCursor) => set({ isGazingAtCursor }),
   setOriginalImage: (url) => set({ originalImage: url }),
-  setOriginalImageHash: (originalImageHash) => set({ originalImageHash }),
+  setOriginalImageUuid: (originalImageUuid) => set({ originalImageUuid }),
   setPreviewImage: (url) => set({ previewImage: url }),
   resetImage: () => {
     const { originalImage } = get();
@@ -29966,16 +29966,16 @@ var useMainStore = create((set, get) => ({
     } });
   },
   handleServerResponse: async (params) => {
-    const { originalImage, setMetadata, setPreviewImage, setOriginalImageHash, applyModifiedHeadToCanvas, modifyImage } = useMainStore.getState();
+    const { originalImage, setMetadata, setPreviewImage, setOriginalImageUuid, applyModifiedHeadToCanvas, modifyImage } = useMainStore.getState();
     if (typeof params.error === "string") {
       console.error(`handleServerResponse: failed to perform the request, resetting the app (${params.error})`);
       setPreviewImage(originalImage);
-      setOriginalImageHash("");
+      setOriginalImageUuid("");
     } else if (typeof params.image !== "undefined") {
       const image = await convertImageToBase64(params.image);
       setPreviewImage(image);
     } else if (typeof params.loaded !== "undefined") {
-      setOriginalImageHash(params.loaded.h);
+      setOriginalImageUuid(params.loaded.u);
       setMetadata({
         center: params.loaded.c,
         size: params.loaded.s,
@@ -30041,7 +30041,7 @@ var useMainStore = create((set, get) => ({
   modifyImage: async ({ landmark, vector, mode }) => {
     const {
       originalImage,
-      originalImageHash,
+      originalImageUuid,
       params: previousParams,
       setParams,
       setError,
@@ -30139,8 +30139,8 @@ var useMainStore = create((set, get) => ({
     }
     setParams(params);
     try {
-      if (originalImageHash) {
-        facePoke.transformImage(originalImageHash, params);
+      if (originalImageUuid) {
+        facePoke.transformImage(originalImageUuid, params);
       }
     } catch (error) {
       setError("Failed to modify image");
