@@ -131,7 +131,7 @@ Contributions to FacePoke are welcome! Please read our [Contributing Guidelines]
 
 FacePoke is released under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-Please note that while the code of LivePortrait and Insightface are open-source with "no limitation for both academic and commercial usage", the model weights trained from Insightface data are available for [https://github.com/deepinsight/insightface?tab=readme-ov-file#license](non-commercial research purposes only).
+Please note that while the code of LivePortrait and Insightface are open-source with "no limitation for both academic and commercial usage", the model weights trained from Insightface data are available for [non-commercial research purposes only](https://github.com/deepinsight/insightface?tab=readme-ov-file#license).
 
 ---
 
