@@ -65,7 +65,7 @@ class Engine:
     @alru_cache(maxsize=512)
     async def load_image(self, data):
         image = Image.open(io.BytesIO(data))
-        uuid = uuid.uuid4()
+        uid = uuid.uuid4()
         img_rgb = np.array(image)
 
         inference_cfg = self.live_portrait.live_portrait_wrapper.cfg
@@ -87,13 +87,13 @@ class Engine:
             'inference_cfg': inference_cfg
         }
 
-        self.processed_cache[uuid] = processed_data
+        self.processed_cache[uid] = processed_data
 
         # Calculate the bounding box
         bbox_info = parse_bbox_from_landmark(processed_data['crop_info']['lmk_crop'], scale=1.0)
 
         return {
-            'u': uuid,
+            'u': uid,
 
             # those aren't easy to serialize
             'c': bbox_info['center'], # 2x1
