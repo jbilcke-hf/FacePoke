@@ -103,12 +103,12 @@ class Engine:
             # 'bbox_rot': bbox_info['bbox_rot'].toList(),  # 4x2
         }
 
-    async def transform_image(self, uuid: str, params: Dict[str, float]) -> bytes:
+    async def transform_image(self, uid: str, params: Dict[str, float]) -> bytes:
         # If we don't have the image in cache yet, add it
-        if uuid not in self.processed_cache:
+        if uid not in self.processed_cache:
             raise ValueError("cache miss")
 
-        processed_data = self.processed_cache[uuid]
+        processed_data = self.processed_cache[uid]
 
         try:
             # Apply modifications based on params
