@@ -394,11 +394,14 @@ export function useFaceLandmarkDetection() {
       if (!currentLandmark || (currentLandmark?.group !== landmark?.group)) {
         setActiveLandmark(landmark);
       }
+
+      /*
       modifyImageWithRateLimit({
         landmark,
         vector,
         mode: 'HOVERING'
       });
+      */
     }
   }, [currentLandmark, dragStart, setActiveLandmark, setIsDragging, modifyImageWithRateLimit, landmarkCenters]);
 

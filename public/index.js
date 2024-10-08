@@ -32970,7 +32970,7 @@ function useFaceLandmarkDetection() {
   const previewImage = useMainStore((s2) => s2.previewImage);
   const handleServerResponse = useMainStore((s2) => s2.handleServerResponse);
   const faceLandmarks = useMainStore((s2) => s2.faceLandmarks);
-  const throttleInMs = 180;
+  const throttleInMs = 220;
   const [isMediaPipeReady, setIsMediaPipeReady] = import_react7.useState(false);
   const [isDrawingUtilsReady, setIsDrawingUtilsReady] = import_react7.useState(false);
   const [dragStart, setDragStart] = import_react7.useState(null);
@@ -33248,11 +33248,6 @@ function useFaceLandmarkDetection() {
       if (!currentLandmark || currentLandmark?.group !== landmark?.group) {
         setActiveLandmark(landmark);
       }
-      modifyImageWithRateLimit({
-        landmark,
-        vector,
-        mode: "HOVERING"
-      });
     }
   }, [currentLandmark, dragStart, setActiveLandmark, setIsDragging, modifyImageWithRateLimit, landmarkCenters]);
   const handleEnd = import_react7.useCallback((x2, y2, mode) => {
