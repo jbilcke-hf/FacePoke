@@ -65,7 +65,7 @@ class Engine:
     @alru_cache(maxsize=512)
     async def load_image(self, data):
         image = Image.open(io.BytesIO(data))
-        uid = uuid.uuid4()
+        uid = str(uuid.uuid4())
         img_rgb = np.array(image)
 
         inference_cfg = self.live_portrait.live_portrait_wrapper.cfg
