@@ -18,7 +18,7 @@ export function useFaceLandmarkDetection() {
   // if we only send the face/square then we can use 138ms
   // unfortunately it doesn't work well yet
   // const throttleInMs = 138ms
-  const throttleInMs = 200
+  const throttleInMs = 220
   ////////////////////////////////////////////////////////////////////////
 
   // State for face detection

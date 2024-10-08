@@ -129,7 +129,7 @@ class Engine:
             # 'bbox_rot': bbox_info['bbox_rot'].toList(),  # 4x2
         }
 
-    def transform_image(self, image_hash: str, params: Dict[str, float]) -> bytes:
+    async def transform_image(self, image_hash: str, params: Dict[str, float]) -> bytes:
         # If we don't have the image in cache yet, add it
         if image_hash not in self.processed_cache:
             raise ValueError("cache miss")
@@ -197,11 +197,11 @@ class Engine:
             x_d_new = processed_data['x_s_info']['scale'] * (x_d_new @ R_new) + processed_data['x_s_info']['t']
 
             # Apply stitching
-            x_d_new = self.live_portrait.live_portrait_wrapper.stitching(processed_data['x_s'], x_d_new)
+            x_d_new = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.stitching, processed_data['x_s'], x_d_new)
 
             # Generate the output
-            out = self.live_portrait.live_portrait_wrapper.warp_decode(processed_data['f_s'], processed_data['x_s'], x_d_new)
-            I_p = self.live_portrait.live_portrait_wrapper.parse_output(out['out'])
+            out = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.warp_decode, processed_data['f_s'], processed_data['x_s'], x_d_new)
+            I_p = await asyncio.to_thread(self.live_portrait.live_portrait_wrapper.parse_output, out['out'])
 
             buffered = io.BytesIO()
 
@@ -214,11 +214,11 @@ class Engine:
             # I'm currently running some experiments to do it in the frontend
             #
             #  --- old way: we do it in the server-side: ---
-            mask_ori = prepare_paste_back(
+            mask_ori = await asyncio.to_thread(prepare_paste_back,
                 processed_data['inference_cfg'].mask_crop, processed_data['crop_info']['M_c2o'],
                 dsize=(processed_data['img_rgb'].shape[1], processed_data['img_rgb'].shape[0])
             )
-            I_p_to_ori_blend = paste_back(
+            I_p_to_ori_blend = await asyncio.to_thread(paste_back,
                 I_p[0], processed_data['crop_info']['M_c2o'], processed_data['img_rgb'], mask_ori
             )
             result_image = Image.fromarray(I_p_to_ori_blend)

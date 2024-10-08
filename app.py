@@ -79,7 +79,7 @@ async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
 
                 elif msg.type == WSMsgType.TEXT:
                     data = json.loads(msg.data)
-                    webp_bytes = engine.transform_image(data.get('hash'), data.get('params'))
+                    webp_bytes = await engine.transform_image(data.get('hash'), data.get('params'))
                     await ws.send_bytes(webp_bytes)
 
             except Exception as e:
