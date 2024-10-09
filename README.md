@@ -9,6 +9,8 @@ license: mit
 header: mini
 app_file: app.py
 app_port: 8080
+disable_embedding: true
+short_description: Import a portrait, click to move the head!
 ---
 
 # FacePoke
