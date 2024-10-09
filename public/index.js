@@ -29697,7 +29697,8 @@ class FacePoke {
   async initializeWebSocket() {
     console.log(`[FacePoke] Initializing WebSocket connection`);
     const connect = () => {
-      this.ws = new WebSocket(`wss://${window.location.host}/ws`);
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      this.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
       this.ws.onopen = this.handleWebSocketOpen.bind(this);
       this.ws.onclose = this.handleWebSocketClose.bind(this);
       this.ws.onerror = this.handleWebSocketError.bind(this);
