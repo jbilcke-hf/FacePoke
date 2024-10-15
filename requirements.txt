@@ -36,7 +36,11 @@ ffmpeg-python==0.2.0
 
 # versions of onnx gpu <= 1.17 did not support Cuda 12
 onnxruntime-gpu==1.19.2
+
+# onnx 1.16.2 has some issues it seems:
+# https://github.com/onnx/onnx/issues/6267
 onnx==1.16.2
+
 scikit-image==0.20.0
 albumentations==1.3.1
 matplotlib==3.7.2
