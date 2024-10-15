@@ -54,13 +54,19 @@ Contributions are welcome to help supporting other platforms!
 
 ### Local Setup
 
-1. Clone the repository:
+1. Make sure you have Git and Git LFS installed globally (https://git-lfs.com):
+
+   ```bash
+   git lfs install
+   ```
+
+2. Clone the repository:
    ```bash
    git clone https://github.com/jbilcke-hf/FacePoke.git
    cd FacePoke
    ```
 
-2. Install Python dependencies:
+3. Install Python dependencies:
 
    Using a virtual environment (Python venv) is strongly recommended.
 
@@ -70,23 +76,23 @@ Contributions are welcome to help supporting other platforms!
    pip3 install --upgrade -r requirements.txt
    ```
 
-3. Install frontend dependencies:
+4. Install frontend dependencies:
    ```bash
    cd client
    bun install
    ```
 
-4. Build the frontend:
+5. Build the frontend:
    ```bash
    bun build ./src/index.tsx --outdir ../public/
    ```
 
-5. Start the backend server:
+6. Start the backend server:
    ```bash
    python app.py
    ```
 
-6. Open `http://localhost:8080` in your web browser.
+7. Open `http://localhost:8080` in your web browser.
 
 ### Docker Deployment
 
