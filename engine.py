@@ -118,6 +118,7 @@ class Engine:
             # Apply modifications based on params
             x_d_new = processed_data['x_s_info']['kp'].clone()
 
+            # Adapted from https://github.com/PowerHouseMan/ComfyUI-AdvancedLivePortrait/blob/main/nodes.py#L408-L472
             modifications = [
                 ('smile', [
                     (0, 20, 1, -0.01), (0, 14, 1, -0.02), (0, 17, 1, 0.0065), (0, 17, 2, 0.003),
@@ -152,7 +153,17 @@ class Engine:
                     (0, 2, 1, -0.001 if params.get('eyebrow', 0) > 0 else -0.0003),
                     (0, 1, 0, -0.001 if params.get('eyebrow', 0) <= 0 else 0),
                     (0, 2, 0, 0.001 if params.get('eyebrow', 0) <= 0 else 0)
-                ])
+                ]),
+                # Some other ones: https://github.com/jbilcke-hf/FacePoke/issues/22#issuecomment-2408708028
+                # Still need to check how exactly we would control those in the UI,
+                # as we don't have yet segmentation in the frontend UI for those body parts
+                #('lower_lip', [
+                #    (0, 19, 1, 0.02)
+                #]),
+                #('upper_lip', [
+                #    (0, 20, 1, -0.01)
+                #]),
+                #('neck', [(0, 5, 1, 0.01)]),
             ]
 
             for param_name, adjustments in modifications:
