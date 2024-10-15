@@ -65,6 +65,10 @@ class Engine:
     @alru_cache(maxsize=512)
     async def load_image(self, data):
         image = Image.open(io.BytesIO(data))
+
+        # Convert the image to RGB mode (removes alpha channel if present)
+        image = image.convert('RGB')
+
         uid = str(uuid.uuid4())
         img_rgb = np.array(image)
 
