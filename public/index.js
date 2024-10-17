@@ -33517,7 +33517,7 @@ function App() {
     if (previewImage) {
       const link = document.createElement("a");
       link.href = previewImage;
-      link.download = "modified_image.png";
+      link.download = "result.webp";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
