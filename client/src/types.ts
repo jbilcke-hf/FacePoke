@@ -38,7 +38,7 @@ export type OnServerResponseParams = {
   image?: Blob
   error?: string
   loaded?: {
-    i: string
+    u: string
   } & {
     c: number[] //center - 2x1
     s: number // size - scalar

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Download } from 'lucide-react';
+import { FiDownload } from 'react-icons/fi';
+import { PiImageSquare } from 'react-icons/pi';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { truncateFileName } from './lib/utils';
@@ -118,8 +119,8 @@ export function App() {
                     isMediaPipeReady ? 'bg-slate-600 hover:bg-slate-500' : 'bg-slate-500 cursor-not-allowed'
                   } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`}
                 >
-                  <Spinner />
-                  {imageFile ? truncateFileName(imageFile.name, 32) : (isMediaPipeReady ? 'Choose a portrait photo' : 'Initializing...')}
+                  <PiImageSquare className="w-6 h-6 mr-2" />
+                  {imageFile ? `Replace` : (isMediaPipeReady ? 'Choose a portrait photo' : 'Initializing...')}
                 </label>
               </div>
               {previewImage && (
@@ -127,7 +128,7 @@ export function App() {
                   onClick={handleDownload}
                   className="inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl"
                 >
-                  <Download className="w-4 h-4 mr-2" />
+                  <FiDownload className="w-5 h-5 mr-2" />
                   Download
                 </button>
               )}

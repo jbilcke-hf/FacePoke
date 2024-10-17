@@ -12,7 +12,7 @@ from functools import lru_cache
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image
+from PIL import Image, ImageOps
 
 from liveportrait.config.argument_config import ArgumentConfig
 from liveportrait.utils.camera import get_rotation_matrix
@@ -65,6 +65,9 @@ class Engine:
     @alru_cache(maxsize=512)
     async def load_image(self, data):
         image = Image.open(io.BytesIO(data))
+
+        # keep the exif orientation (fix the selfie issue on iphone)
+        image = ImageOps.exif_transpose(image)
 
         # Convert the image to RGB mode (removes alpha channel if present)
         image = image.convert('RGB')

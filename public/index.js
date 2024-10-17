@@ -22658,7 +22658,7 @@ var require_client = __commonJS((exports) => {
 
 // node_modules/react/cjs/react-jsx-dev-runtime.development.js
 var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
-  var React = __toESM(require_react(), 1);
+  var React3 = __toESM(require_react(), 1);
   if (true) {
     (function() {
       var REACT_ELEMENT_TYPE = Symbol.for("react.element");
@@ -22686,7 +22686,7 @@ var require_react_jsx_dev_runtime_development = __commonJS((exports) => {
         }
         return null;
       }
-      var ReactSharedInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+      var ReactSharedInternals = React3.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
       function error(format) {
         {
           {
@@ -23685,77 +23685,165 @@ var client = __toESM(require_client(), 1);
 // src/app.tsx
 var import_react9 = __toESM(require_react(), 1);
 
-// node_modules/lucide-react/dist/esm/createLucideIcon.js
+// node_modules/react-icons/lib/iconBase.mjs
 var import_react2 = __toESM(require_react(), 1);
+var _objectWithoutProperties = function(source, excluded) {
+  if (source == null)
+    return {};
+  var target = _objectWithoutPropertiesLoose(source, excluded);
+  var key, i;
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+    for (i = 0;i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0)
+        continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key))
+        continue;
+      target[key] = source[key];
+    }
+  }
+  return target;
+};
+var _objectWithoutPropertiesLoose = function(source, excluded) {
+  if (source == null)
+    return {};
+  var target = {};
+  for (var key in source) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      if (excluded.indexOf(key) >= 0)
+        continue;
+      target[key] = source[key];
+    }
+  }
+  return target;
+};
+var _extends = function() {
+  _extends = Object.assign ? Object.assign.bind() : function(target) {
+    for (var i = 1;i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
+  return _extends.apply(this, arguments);
+};
+var ownKeys = function(e, r) {
+  var t = Object.keys(e);
+  if (Object.getOwnPropertySymbols) {
+    var o = Object.getOwnPropertySymbols(e);
+    r && (o = o.filter(function(r2) {
+      return Object.getOwnPropertyDescriptor(e, r2).enumerable;
+    })), t.push.apply(t, o);
+  }
+  return t;
+};
+var _objectSpread = function(e) {
+  for (var r = 1;r < arguments.length; r++) {
+    var t = arguments[r] != null ? arguments[r] : {};
+    r % 2 ? ownKeys(Object(t), true).forEach(function(r2) {
+      _defineProperty(e, r2, t[r2]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function(r2) {
+      Object.defineProperty(e, r2, Object.getOwnPropertyDescriptor(t, r2));
+    });
+  }
+  return e;
+};
+var _defineProperty = function(obj, key, value) {
+  key = _toPropertyKey(key);
+  if (key in obj) {
+    Object.defineProperty(obj, key, { value, enumerable: true, configurable: true, writable: true });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+};
+var _toPropertyKey = function(t) {
+  var i = _toPrimitive(t, "string");
+  return typeof i == "symbol" ? i : i + "";
+};
+var _toPrimitive = function(t, r) {
+  if (typeof t != "object" || !t)
+    return t;
+  var e = t[Symbol.toPrimitive];
+  if (e !== undefined) {
+    var i = e.call(t, r || "default");
+    if (typeof i != "object")
+      return i;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
+  }
+  return (r === "string" ? String : Number)(t);
+};
 
-// node_modules/lucide-react/dist/esm/shared/src/utils.js
-var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-var mergeClasses = (...classes) => classes.filter((className, index, array) => {
-  return Boolean(className) && array.indexOf(className) === index;
-}).join(" ");
-
-// node_modules/lucide-react/dist/esm/Icon.js
+// node_modules/react-icons/lib/iconContext.mjs
 var import_react = __toESM(require_react(), 1);
-
-// node_modules/lucide-react/dist/esm/defaultAttributes.js
-var defaultAttributes = {
-  xmlns: "http://www.w3.org/2000/svg",
-  width: 24,
-  height: 24,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round",
-  strokeLinejoin: "round"
+var DefaultContext = {
+  color: undefined,
+  size: undefined,
+  className: undefined,
+  style: undefined,
+  attr: undefined
 };
+var IconContext = import_react.default.createContext && import_react.default.createContext(DefaultContext);
 
-// node_modules/lucide-react/dist/esm/Icon.js
-var Icon = import_react.forwardRef(({
-  color = "currentColor",
-  size = 24,
-  strokeWidth = 2,
-  absoluteStrokeWidth,
-  className = "",
-  children,
-  iconNode,
-  ...rest
-}, ref) => {
-  return import_react.createElement("svg", {
-    ref,
-    ...defaultAttributes,
-    width: size,
-    height: size,
-    stroke: color,
-    strokeWidth: absoluteStrokeWidth ? Number(strokeWidth) * 24 / Number(size) : strokeWidth,
-    className: mergeClasses("lucide", className),
-    ...rest
-  }, [
-    ...iconNode.map(([tag, attrs]) => import_react.createElement(tag, attrs)),
-    ...Array.isArray(children) ? children : [children]
-  ]);
-});
-
-// node_modules/lucide-react/dist/esm/createLucideIcon.js
-var createLucideIcon = (iconName, iconNode) => {
-  const Component = import_react2.forwardRef(({ className, ...props }, ref) => import_react2.createElement(Icon, {
-    ref,
-    iconNode,
-    className: mergeClasses(`lucide-${toKebabCase(iconName)}`, className),
-    ...props
-  }));
-  Component.displayName = `${iconName}`;
-  return Component;
+// node_modules/react-icons/lib/iconBase.mjs
+var Tree2Element = function(tree) {
+  return tree && tree.map((node, i) => import_react2.default.createElement(node.tag, _objectSpread({
+    key: i
+  }, node.attr), Tree2Element(node.child)));
 };
+function GenIcon(data) {
+  return (props) => import_react2.default.createElement(IconBase, _extends({
+    attr: _objectSpread({}, data.attr)
+  }, props), Tree2Element(data.child));
+}
+function IconBase(props) {
+  var elem = (conf) => {
+    var {
+      attr,
+      size,
+      title
+    } = props, svgProps = _objectWithoutProperties(props, _excluded);
+    var computedSize = size || conf.size || "1em";
+    var className;
+    if (conf.className)
+      className = conf.className;
+    if (props.className)
+      className = (className ? className + " " : "") + props.className;
+    return import_react2.default.createElement("svg", _extends({
+      stroke: "currentColor",
+      fill: "currentColor",
+      strokeWidth: "0"
+    }, conf.attr, attr, svgProps, {
+      className,
+      style: _objectSpread(_objectSpread({
+        color: props.color || conf.color
+      }, conf.style), props.style),
+      height: computedSize,
+      width: computedSize,
+      xmlns: "http://www.w3.org/2000/svg"
+    }), title && import_react2.default.createElement("title", null, title), props.children);
+  };
+  return IconContext !== undefined ? import_react2.default.createElement(IconContext.Consumer, null, (conf) => elem(conf)) : elem(DefaultContext);
+}
+var _excluded = ["attr", "size", "title"];
 
-// node_modules/lucide-react/dist/esm/icons/download.js
-var Download = createLucideIcon("Download", [
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["polyline", { points: "7 10 12 15 17 10", key: "2ggqvy" }],
-  ["line", { x1: "12", x2: "12", y1: "15", y2: "3", key: "1vk2je" }]
-]);
+// node_modules/react-icons/fi/index.mjs
+function FiDownload(props) {
+  return GenIcon({ tag: "svg", attr: { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }, child: [{ tag: "path", attr: { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }, child: [] }, { tag: "polyline", attr: { points: "7 10 12 15 17 10" }, child: [] }, { tag: "line", attr: { x1: "12", y1: "15", x2: "12", y2: "3" }, child: [] }] })(props);
+}
+
+// node_modules/react-icons/pi/index.mjs
+function PiImageSquare(props) {
+  return GenIcon({ tag: "svg", attr: { viewBox: "0 0 256 256", fill: "currentColor" }, child: [{ tag: "path", attr: { d: "M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM48,48H208v77.38l-24.69-24.7a16,16,0,0,0-22.62,0L53.37,208H48ZM208,208H76l96-96,36,36v60ZM96,120A24,24,0,1,0,72,96,24,24,0,0,0,96,120Zm0-32a8,8,0,1,1-8,8A8,8,0,0,1,96,88Z" }, child: [] }] })(props);
+}
+
 // src/components/ui/alert.tsx
-var React = __toESM(require_react(), 1);
+var React3 = __toESM(require_react(), 1);
 
 // node_modules/class-variance-authority/node_modules/clsx/dist/clsx.mjs
 var r = function(e) {
@@ -25181,20 +25269,20 @@ var alertVariants = cva("relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&
     variant: "default"
   }
 });
-var Alert = React.forwardRef(({ className, variant, ...props }, ref) => jsx_dev_runtime.jsxDEV("div", {
+var Alert = React3.forwardRef(({ className, variant, ...props }, ref) => jsx_dev_runtime.jsxDEV("div", {
   ref,
   role: "alert",
   className: cn(alertVariants({ variant }), className),
   ...props
 }, undefined, false, undefined, this));
 Alert.displayName = "Alert";
-var AlertTitle = React.forwardRef(({ className, ...props }, ref) => jsx_dev_runtime.jsxDEV("h5", {
+var AlertTitle = React3.forwardRef(({ className, ...props }, ref) => jsx_dev_runtime.jsxDEV("h5", {
   ref,
   className: cn("mb-1 font-medium leading-none tracking-tight", className),
   ...props
 }, undefined, false, undefined, this));
 AlertTitle.displayName = "AlertTitle";
-var AlertDescription = React.forwardRef(({ className, ...props }, ref) => jsx_dev_runtime.jsxDEV("div", {
+var AlertDescription = React3.forwardRef(({ className, ...props }, ref) => jsx_dev_runtime.jsxDEV("div", {
   ref,
   className: cn("text-sm [&_p]:leading-relaxed", className),
   ...props
@@ -33345,23 +33433,6 @@ function About() {
   }, undefined, true, undefined, this);
 }
 
-// src/components/Spinner.tsx
-var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
-function Spinner() {
-  return jsx_dev_runtime3.jsxDEV("svg", {
-    className: "mr-3 h-6 w-6",
-    fill: "none",
-    viewBox: "0 0 24 24",
-    stroke: "currentColor",
-    children: jsx_dev_runtime3.jsxDEV("path", {
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      strokeWidth: 2,
-      d: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-    }, undefined, false, undefined, this)
-  }, undefined, false, undefined, this);
-}
-
 // src/hooks/useFacePokeAPI.ts
 var import_react8 = __toESM(require_react(), 1);
 function useFacePokeAPI() {
@@ -33392,14 +33463,14 @@ function useFacePokeAPI() {
 }
 
 // src/layout.tsx
-var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
 function Layout({ children }) {
-  return jsx_dev_runtime4.jsxDEV("div", {
+  return jsx_dev_runtime3.jsxDEV("div", {
     className: "fixed min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-stone-300",
     style: { boxShadow: "inset 0 0 10vh 0 rgb(0 0 0 / 30%)" },
-    children: jsx_dev_runtime4.jsxDEV("div", {
+    children: jsx_dev_runtime3.jsxDEV("div", {
       className: "min-h-screen w-full py-8 flex flex-col justify-center",
-      children: jsx_dev_runtime4.jsxDEV("div", {
+      children: jsx_dev_runtime3.jsxDEV("div", {
         className: "flex flex-col items-center justify-center p-4 sm:max-w-5xl sm:mx-auto",
         children
       }, undefined, false, undefined, this)
@@ -33408,7 +33479,7 @@ function Layout({ children }) {
 }
 
 // src/app.tsx
-var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
 function App() {
   const error = useMainStore((s2) => s2.error);
   const setError = useMainStore((s2) => s2.setError);
@@ -33453,30 +33524,30 @@ function App() {
     }
   }, [previewImage]);
   const canDisplayBlendShapes = false;
-  const displayBlendShapes = import_react9.useMemo(() => jsx_dev_runtime5.jsxDEV("div", {
+  const displayBlendShapes = import_react9.useMemo(() => jsx_dev_runtime4.jsxDEV("div", {
     className: "mt-4",
     children: [
-      jsx_dev_runtime5.jsxDEV("h3", {
+      jsx_dev_runtime4.jsxDEV("h3", {
         className: "text-lg font-semibold mb-2",
         children: "Blend Shapes"
       }, undefined, false, undefined, this),
-      jsx_dev_runtime5.jsxDEV("ul", {
+      jsx_dev_runtime4.jsxDEV("ul", {
         className: "space-y-1",
-        children: (blendShapes?.[0]?.categories || []).map((shape, index) => jsx_dev_runtime5.jsxDEV("li", {
+        children: (blendShapes?.[0]?.categories || []).map((shape, index) => jsx_dev_runtime4.jsxDEV("li", {
           className: "flex items-center",
           children: [
-            jsx_dev_runtime5.jsxDEV("span", {
+            jsx_dev_runtime4.jsxDEV("span", {
               className: "w-32 text-sm",
               children: shape.categoryName || shape.displayName
             }, undefined, false, undefined, this),
-            jsx_dev_runtime5.jsxDEV("div", {
+            jsx_dev_runtime4.jsxDEV("div", {
               className: "w-full bg-gray-200 rounded-full h-2.5",
-              children: jsx_dev_runtime5.jsxDEV("div", {
+              children: jsx_dev_runtime4.jsxDEV("div", {
                 className: "bg-blue-600 h-2.5 rounded-full",
                 style: { width: `${shape.score * 100}%` }
               }, undefined, false, undefined, this)
             }, undefined, false, undefined, this),
-            jsx_dev_runtime5.jsxDEV("span", {
+            jsx_dev_runtime4.jsxDEV("span", {
               className: "ml-2 text-sm",
               children: shape.score.toFixed(2)
             }, undefined, false, undefined, this)
@@ -33485,42 +33556,42 @@ function App() {
       }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this), [JSON.stringify(blendShapes)]);
-  return jsx_dev_runtime5.jsxDEV(Layout, {
+  return jsx_dev_runtime4.jsxDEV(Layout, {
     children: [
-      error && jsx_dev_runtime5.jsxDEV(Alert, {
+      error && jsx_dev_runtime4.jsxDEV(Alert, {
         variant: "destructive",
         children: [
-          jsx_dev_runtime5.jsxDEV(AlertTitle, {
+          jsx_dev_runtime4.jsxDEV(AlertTitle, {
             children: "Error"
           }, undefined, false, undefined, this),
-          jsx_dev_runtime5.jsxDEV(AlertDescription, {
+          jsx_dev_runtime4.jsxDEV(AlertDescription, {
             children: error
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this),
-      interruptMessage && jsx_dev_runtime5.jsxDEV(Alert, {
+      interruptMessage && jsx_dev_runtime4.jsxDEV(Alert, {
         children: [
-          jsx_dev_runtime5.jsxDEV(AlertTitle, {
+          jsx_dev_runtime4.jsxDEV(AlertTitle, {
             children: "Notice"
           }, undefined, false, undefined, this),
-          jsx_dev_runtime5.jsxDEV(AlertDescription, {
+          jsx_dev_runtime4.jsxDEV(AlertDescription, {
             children: interruptMessage
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this),
-      jsx_dev_runtime5.jsxDEV("div", {
+      jsx_dev_runtime4.jsxDEV("div", {
         className: "mb-5 relative",
         children: [
-          jsx_dev_runtime5.jsxDEV("div", {
+          jsx_dev_runtime4.jsxDEV("div", {
             className: "flex flex-row items-center justify-between w-full",
             children: [
-              jsx_dev_runtime5.jsxDEV("div", {
+              jsx_dev_runtime4.jsxDEV("div", {
                 className: "flex items-center space-x-2",
                 children: [
-                  jsx_dev_runtime5.jsxDEV("div", {
+                  jsx_dev_runtime4.jsxDEV("div", {
                     className: "flex items-center justify-center",
                     children: [
-                      jsx_dev_runtime5.jsxDEV("input", {
+                      jsx_dev_runtime4.jsxDEV("input", {
                         id: "imageInput",
                         type: "file",
                         accept: "image/*",
@@ -33528,34 +33599,36 @@ function App() {
                         className: "hidden",
                         disabled: !isMediaPipeReady
                       }, undefined, false, undefined, this),
-                      jsx_dev_runtime5.jsxDEV("label", {
+                      jsx_dev_runtime4.jsxDEV("label", {
                         htmlFor: "imageInput",
                         className: `cursor-pointer inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white ${isMediaPipeReady ? "bg-slate-600 hover:bg-slate-500" : "bg-slate-500 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`,
                         children: [
-                          jsx_dev_runtime5.jsxDEV(Spinner, {}, undefined, false, undefined, this),
-                          imageFile ? truncateFileName(imageFile.name, 32) : isMediaPipeReady ? "Choose a portrait photo" : "Initializing..."
+                          jsx_dev_runtime4.jsxDEV(PiImageSquare, {
+                            className: "w-6 h-6 mr-2"
+                          }, undefined, false, undefined, this),
+                          imageFile ? `Replace` : isMediaPipeReady ? "Choose a portrait photo" : "Initializing..."
                         ]
                       }, undefined, true, undefined, this)
                     ]
                   }, undefined, true, undefined, this),
-                  previewImage && jsx_dev_runtime5.jsxDEV("button", {
+                  previewImage && jsx_dev_runtime4.jsxDEV("button", {
                     onClick: handleDownload,
                     className: "inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl",
                     children: [
-                      jsx_dev_runtime5.jsxDEV(Download, {
-                        className: "w-4 h-4 mr-2"
+                      jsx_dev_runtime4.jsxDEV(FiDownload, {
+                        className: "w-5 h-5 mr-2"
                       }, undefined, false, undefined, this),
                       "Download"
                     ]
                   }, undefined, true, undefined, this)
                 ]
               }, undefined, true, undefined, this),
-              previewImage && jsx_dev_runtime5.jsxDEV("div", {
+              previewImage && jsx_dev_runtime4.jsxDEV("div", {
                 className: "flex items-center space-x-2",
-                children: jsx_dev_runtime5.jsxDEV("label", {
+                children: jsx_dev_runtime4.jsxDEV("label", {
                   className: "mt-4 flex items-center",
                   children: [
-                    jsx_dev_runtime5.jsxDEV("input", {
+                    jsx_dev_runtime4.jsxDEV("input", {
                       type: "checkbox",
                       checked: isDebugMode,
                       onChange: (e2) => setIsDebugMode(e2.target.checked),
@@ -33567,15 +33640,15 @@ function App() {
               }, undefined, false, undefined, this)
             ]
           }, undefined, true, undefined, this),
-          previewImage && jsx_dev_runtime5.jsxDEV("div", {
+          previewImage && jsx_dev_runtime4.jsxDEV("div", {
             className: "mt-5 relative shadow-2xl rounded-xl overflow-hidden",
             children: [
-              jsx_dev_runtime5.jsxDEV("img", {
+              jsx_dev_runtime4.jsxDEV("img", {
                 src: previewImage,
                 alt: "Preview",
                 className: "w-full"
               }, undefined, false, undefined, this),
-              jsx_dev_runtime5.jsxDEV("canvas", {
+              jsx_dev_runtime4.jsxDEV("canvas", {
                 ref: canvasRefCallback,
                 className: "absolute top-0 left-0 w-full h-full select-none",
                 onMouseDown: handleMouseDown,
@@ -33599,12 +33672,12 @@ function App() {
           canDisplayBlendShapes && displayBlendShapes
         ]
       }, undefined, true, undefined, this),
-      jsx_dev_runtime5.jsxDEV(About, {}, undefined, false, undefined, this)
+      jsx_dev_runtime4.jsxDEV(About, {}, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
 }
 
 // src/index.tsx
-var jsx_dev_runtime6 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
 var root = client.createRoot(document.getElementById("root"));
-root.render(jsx_dev_runtime6.jsxDEV(App, {}, undefined, false, undefined, this));
+root.render(jsx_dev_runtime5.jsxDEV(App, {}, undefined, false, undefined, this));

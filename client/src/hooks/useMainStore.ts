@@ -432,5 +432,5 @@ export const useMainStore = create<ImageState>((set, get) => ({
       // console.error('Error modifying image:', error);
       setError('Failed to modify image');
     }
-  }
+  },
 }))
