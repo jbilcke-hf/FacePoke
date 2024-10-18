@@ -33483,17 +33483,32 @@ function Layout({ children }) {
       document.body.removeEventListener("touchmove", preventDefaultTouchBehavior);
     };
   }, []);
-  return jsx_dev_runtime3.jsxDEV("div", {
-    className: "fixed min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-stone-300",
-    style: { boxShadow: "inset 0 0 10vh 0 rgb(0 0 0 / 30%)" },
-    children: jsx_dev_runtime3.jsxDEV("div", {
-      className: "min-h-screen w-full flex flex-col justify-center",
-      children: jsx_dev_runtime3.jsxDEV("div", {
-        className: "flex flex-col items-center justify-center p-2 sm:max-w-5xl sm:mx-auto",
-        children
+  return jsx_dev_runtime3.jsxDEV(jsx_dev_runtime3.Fragment, {
+    children: [
+      jsx_dev_runtime3.jsxDEV("style", {
+        children: `
+        html, body {
+          position: fixed;
+          overflow: hidden;
+          width: 100%;
+          height: 100%;
+          overscroll-behavior: none;
+        }
+      `
+      }, undefined, false, undefined, this),
+      jsx_dev_runtime3.jsxDEV("div", {
+        className: "fixed min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-stone-300",
+        style: { boxShadow: "inset 0 0 10vh 0 rgb(0 0 0 / 30%)" },
+        children: jsx_dev_runtime3.jsxDEV("div", {
+          className: "min-h-screen w-full flex flex-col justify-center",
+          children: jsx_dev_runtime3.jsxDEV("div", {
+            className: "flex flex-col items-center justify-center p-2 sm:max-w-5xl sm:mx-auto",
+            children
+          }, undefined, false, undefined, this)
+        }, undefined, false, undefined, this)
       }, undefined, false, undefined, this)
-    }, undefined, false, undefined, this)
-  }, undefined, false, undefined, this);
+    ]
+  }, undefined, true, undefined, this);
 }
 
 // src/app.tsx
