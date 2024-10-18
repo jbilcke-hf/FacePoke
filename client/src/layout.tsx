@@ -1,6 +1,21 @@
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useEffect } from 'react';
 
 export function Layout({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    // Prevent default touch behavior
+    const preventDefaultTouchBehavior = (e: TouchEvent) => {
+      if (e.target instanceof HTMLElement && e.target.tagName !== 'CANVAS') {
+        e.preventDefault();
+      }
+    };
+
+    document.body.addEventListener('touchmove', preventDefaultTouchBehavior, { passive: false });
+
+    return () => {
+      document.body.removeEventListener('touchmove', preventDefaultTouchBehavior);
+    };
+  }, []);
+
   return (
     <div className="fixed min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-stone-300"
       style={{ boxShadow: "inset 0 0 10vh 0 rgb(0 0 0 / 30%)" }}>

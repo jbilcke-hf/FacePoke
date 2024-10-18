@@ -23683,7 +23683,7 @@ var require_lodash = __commonJS((exports, module) => {
 var client = __toESM(require_client(), 1);
 
 // src/app.tsx
-var import_react9 = __toESM(require_react(), 1);
+var import_react10 = __toESM(require_react(), 1);
 
 // node_modules/react-icons/lib/iconBase.mjs
 var import_react2 = __toESM(require_react(), 1);
@@ -33469,8 +33469,20 @@ function useFacePokeAPI() {
 }
 
 // src/layout.tsx
+var import_react9 = __toESM(require_react(), 1);
 var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
 function Layout({ children }) {
+  import_react9.useEffect(() => {
+    const preventDefaultTouchBehavior = (e2) => {
+      if (e2.target instanceof HTMLElement && e2.target.tagName !== "CANVAS") {
+        e2.preventDefault();
+      }
+    };
+    document.body.addEventListener("touchmove", preventDefaultTouchBehavior, { passive: false });
+    return () => {
+      document.body.removeEventListener("touchmove", preventDefaultTouchBehavior);
+    };
+  }, []);
   return jsx_dev_runtime3.jsxDEV("div", {
     className: "fixed min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-stone-300",
     style: { boxShadow: "inset 0 0 10vh 0 rgb(0 0 0 / 30%)" },
@@ -33514,12 +33526,12 @@ function App() {
     handleTouchEnd,
     currentOpacity
   } = useFaceLandmarkDetection();
-  const videoRef = import_react9.useRef(null);
-  const handleFileChange = import_react9.useCallback((event) => {
+  const videoRef = import_react10.useRef(null);
+  const handleFileChange = import_react10.useCallback((event) => {
     const files = event.target.files;
     setImageFile(files?.[0] || undefined);
   }, [setImageFile]);
-  const handleDownload = import_react9.useCallback(() => {
+  const handleDownload = import_react10.useCallback(() => {
     if (previewImage) {
       const link = document.createElement("a");
       link.href = previewImage;
@@ -33530,7 +33542,7 @@ function App() {
     }
   }, [previewImage]);
   const canDisplayBlendShapes = false;
-  const displayBlendShapes = import_react9.useMemo(() => jsx_dev_runtime4.jsxDEV("div", {
+  const displayBlendShapes = import_react10.useMemo(() => jsx_dev_runtime4.jsxDEV("div", {
     className: "mt-4",
     children: [
       jsx_dev_runtime4.jsxDEV("h3", {
@@ -33660,9 +33672,18 @@ function App() {
                 onMouseDown: handleMouseDown,
                 onMouseUp: handleMouseUp,
                 onMouseMove: handleMouseMove,
-                onTouchStart: handleTouchStart,
-                onTouchMove: handleTouchMove,
-                onTouchEnd: handleTouchEnd,
+                onTouchStart: (e2) => {
+                  e2.preventDefault();
+                  handleTouchStart(e2);
+                },
+                onTouchMove: (e2) => {
+                  e2.preventDefault();
+                  handleTouchMove(e2);
+                },
+                onTouchEnd: (e2) => {
+                  e2.preventDefault();
+                  handleTouchEnd(e2);
+                },
                 style: {
                   position: "absolute",
                   top: 0,

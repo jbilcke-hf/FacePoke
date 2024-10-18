@@ -181,9 +181,18 @@ export function App() {
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+                onTouchStart={(e) => {
+                  e.preventDefault(); // Prevent default touch behavior on canvas
+                  handleTouchStart(e);
+                }}
+                onTouchMove={(e) => {
+                  e.preventDefault(); // Prevent default touch behavior on canvas
+                  handleTouchMove(e);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault(); // Prevent default touch behavior on canvas
+                  handleTouchEnd(e);
+                }}
                 style={{
                   position: 'absolute',
                   top: 0,
