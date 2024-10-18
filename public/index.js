@@ -24891,6 +24891,12 @@ var getDefaultConfig = () => {
       "border-color-y": [{
         "border-y": [borderColor]
       }],
+      "border-color-s": [{
+        "border-s": [borderColor]
+      }],
+      "border-color-e": [{
+        "border-e": [borderColor]
+      }],
       "border-color-t": [{
         "border-t": [borderColor]
       }],
@@ -25223,7 +25229,7 @@ var getDefaultConfig = () => {
       "border-w": ["border-w-s", "border-w-e", "border-w-t", "border-w-r", "border-w-b", "border-w-l"],
       "border-w-x": ["border-w-r", "border-w-l"],
       "border-w-y": ["border-w-t", "border-w-b"],
-      "border-color": ["border-color-t", "border-color-r", "border-color-b", "border-color-l"],
+      "border-color": ["border-color-s", "border-color-e", "border-color-t", "border-color-r", "border-color-b", "border-color-l"],
       "border-color-x": ["border-color-r", "border-color-l"],
       "border-color-y": ["border-color-t", "border-color-b"],
       "scroll-m": ["scroll-mx", "scroll-my", "scroll-ms", "scroll-me", "scroll-mt", "scroll-mr", "scroll-mb", "scroll-ml"],
