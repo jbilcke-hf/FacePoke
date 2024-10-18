@@ -33475,9 +33475,9 @@ function Layout({ children }) {
     className: "fixed min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-stone-300",
     style: { boxShadow: "inset 0 0 10vh 0 rgb(0 0 0 / 30%)" },
     children: jsx_dev_runtime3.jsxDEV("div", {
-      className: "min-h-screen w-full py-8 flex flex-col justify-center",
+      className: "min-h-screen w-full flex flex-col justify-center",
       children: jsx_dev_runtime3.jsxDEV("div", {
-        className: "flex flex-col items-center justify-center p-4 sm:max-w-5xl sm:mx-auto",
+        className: "flex flex-col items-center justify-center p-2 sm:max-w-5xl sm:mx-auto",
         children
       }, undefined, false, undefined, this)
     }, undefined, false, undefined, this)
@@ -33586,7 +33586,7 @@ function App() {
         ]
       }, undefined, true, undefined, this),
       jsx_dev_runtime4.jsxDEV("div", {
-        className: "mb-5 relative",
+        className: "mb-4 relative",
         children: [
           jsx_dev_runtime4.jsxDEV("div", {
             className: "flex flex-row items-center justify-between w-full",
@@ -33607,10 +33607,10 @@ function App() {
                       }, undefined, false, undefined, this),
                       jsx_dev_runtime4.jsxDEV("label", {
                         htmlFor: "imageInput",
-                        className: `cursor-pointer inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white ${isMediaPipeReady ? "bg-slate-600 hover:bg-slate-500" : "bg-slate-500 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`,
+                        className: `cursor-pointer inline-flex items-center border border-transparent font-medium rounded-md text-white ${imageFile ? "text-xs px-2 h-8" : "text-lg px-4 h-12"} ${isMediaPipeReady ? "bg-slate-600 hover:bg-slate-500" : "bg-slate-500 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`,
                         children: [
                           jsx_dev_runtime4.jsxDEV(PiImageSquare, {
-                            className: "w-6 h-6 mr-2"
+                            className: "w-4 h-4 mr-1.5"
                           }, undefined, false, undefined, this),
                           imageFile ? `Replace` : isMediaPipeReady ? "Choose a portrait photo" : "Initializing..."
                         ]
@@ -33619,10 +33619,10 @@ function App() {
                   }, undefined, true, undefined, this),
                   previewImage && jsx_dev_runtime4.jsxDEV("button", {
                     onClick: handleDownload,
-                    className: "inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl",
+                    className: "inline-flex items-center px-2 h-8 border border-transparent text-xs font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl",
                     children: [
                       jsx_dev_runtime4.jsxDEV(FiDownload, {
-                        className: "w-5 h-5 mr-2"
+                        className: "w-4 h-4 mr-1.5"
                       }, undefined, false, undefined, this),
                       "Download"
                     ]
@@ -33632,7 +33632,7 @@ function App() {
               previewImage && jsx_dev_runtime4.jsxDEV("div", {
                 className: "flex items-center space-x-2",
                 children: jsx_dev_runtime4.jsxDEV("label", {
-                  className: "mt-4 flex items-center",
+                  className: "mt-2 flex items-center text-sm mr-2",
                   children: [
                     jsx_dev_runtime4.jsxDEV("input", {
                       type: "checkbox",
@@ -33647,7 +33647,7 @@ function App() {
             ]
           }, undefined, true, undefined, this),
           previewImage && jsx_dev_runtime4.jsxDEV("div", {
-            className: "mt-5 relative shadow-2xl rounded-xl overflow-hidden",
+            className: "mt-2 relative shadow-2xl rounded-xl overflow-hidden",
             children: [
               jsx_dev_runtime4.jsxDEV("img", {
                 src: previewImage,

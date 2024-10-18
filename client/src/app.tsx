@@ -101,7 +101,7 @@ export function App() {
             <AlertDescription>{interruptMessage}</AlertDescription>
           </Alert>
         )}
-        <div className="mb-5 relative">
+        <div className="mb-4 relative">
           <div className="flex flex-row items-center justify-between w-full">
             <div className="flex items-center space-x-2">
               <div className="flex items-center justify-center">
@@ -115,20 +115,22 @@ export function App() {
                 />
                 <label
                   htmlFor="imageInput"
-                  className={`cursor-pointer inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white ${
+                  className={`cursor-pointer inline-flex items-center border border-transparent font-medium rounded-md text-white ${
+                    imageFile ? 'text-xs px-2 h-8' : 'text-lg px-4 h-12'
+                  } ${
                     isMediaPipeReady ? 'bg-slate-600 hover:bg-slate-500' : 'bg-slate-500 cursor-not-allowed'
                   } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`}
                 >
-                  <PiImageSquare className="w-6 h-6 mr-2" />
+                  <PiImageSquare className="w-4 h-4 mr-1.5" />
                   {imageFile ? `Replace` : (isMediaPipeReady ? 'Choose a portrait photo' : 'Initializing...')}
                 </label>
               </div>
               {previewImage && (
                 <button
                   onClick={handleDownload}
-                  className="inline-flex items-center px-3 h-10 border border-transparent text-sm font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl"
+                  className="inline-flex items-center px-2 h-8 border border-transparent text-xs font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl"
                 >
-                  <FiDownload className="w-5 h-5 mr-2" />
+                  <FiDownload className="w-4 h-4 mr-1.5" />
                   Download
                 </button>
               )}
@@ -155,7 +157,7 @@ export function App() {
                 Autotrack head
               </label>
               */}
-              <label className="mt-4 flex items-center">
+              <label className="mt-2 flex items-center text-sm mr-2">
                 <input
                   type="checkbox"
                   checked={isDebugMode}
@@ -167,7 +169,7 @@ export function App() {
             </div>}
           </div>
           {previewImage && (
-            <div className="mt-5 relative shadow-2xl rounded-xl overflow-hidden">
+            <div className="mt-2 relative shadow-2xl rounded-xl overflow-hidden">
               <img
                 src={previewImage}
                 alt="Preview"
