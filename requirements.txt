@@ -39,7 +39,10 @@ onnxruntime-gpu==1.19.2
 
 # onnx 1.16.2 has some issues it seems:
 # https://github.com/onnx/onnx/issues/6267
-onnx==1.16.2
+#onnx==1.16.2
+# update: I've rolled it back to 1.16.1
+# see: https://github.com/jbilcke-hf/FacePoke/issues/23#issuecomment-2414714490
+onnx==1.16.1
 
 scikit-image==0.20.0
 albumentations==1.3.1
