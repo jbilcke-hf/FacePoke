@@ -17,7 +17,7 @@ torchgeometry
 async-lru==2.0.4
 
 # note: gradio is only used for the cropping utility
-gradio==5.0.0b4
+gradio==5.6.0
 
 pyyaml==6.0.1
 numpy==1.22.0 # Updated to resolve conflicts
