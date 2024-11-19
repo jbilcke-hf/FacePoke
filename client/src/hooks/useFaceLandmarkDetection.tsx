@@ -312,7 +312,8 @@ export function useFaceLandmarkDetection() {
       } else {
         console.error('Failed to get 2D context from canvas.');
       }
-      canvasRef.current = node;
+
+      ;(canvasRef as any).current = node;
     }
   }, []);
 

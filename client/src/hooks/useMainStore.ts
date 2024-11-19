@@ -27,10 +27,11 @@ export type ImageState = ImageStateValues & {
   setParams: (params: Partial<ImageModificationParams>) => void
   handleServerResponse: (params: OnServerResponseParams) => Promise<void>
   applyModifiedHeadToCanvas: (headImageBlob: Blob) => Promise<string>
-  modifyImage: ({ landmark, vector, mode }: {
+  modifyImage: ({ landmark, vector, mode, params }: {
     landmark: ClosestLandmark
     vector: { x: number; y: number; z: number }
     mode: ActionMode
+    params?: Partial<ImageModificationParams>
   }) => Promise<void>
 }
 
@@ -256,12 +257,12 @@ export const useMainStore = create<ImageState>((set, get) => ({
       originalImg.src = originalImage;
     })
   },
-  modifyImage: async ({ landmark, vector, mode }: {
+  modifyImage: async ({ landmark, vector, mode, params: directParams }: {
     landmark: ClosestLandmark
     vector: { x: number; y: number; z: number }
     mode: ActionMode
+    params?: Partial<ImageModificationParams>
   }): Promise<void> => {
-
     const {
       originalImage,
       originalImageUuid,
@@ -272,165 +273,161 @@ export const useMainStore = create<ImageState>((set, get) => ({
       isGazingAtCursor
     } = get()
 
-
     if (!originalImage) {
       console.error('Image file or facePoke not available');
       return;
     }
 
+    // Start with previous params or directly provided params
     const params = {
-      ...previousParams
-    }
+      ...previousParams,
+      ...(directParams || {})
+    };
 
-    const generalControl = {
-      minX: -0.30,
-      maxX: 0.30,
-      minY: -0.30,
-      maxY: 0.30
-    }
+    // Only calculate from vectors if no direct params provided
+    if (!directParams) {
+      const generalControl = {
+        minX: -0.30,
+        maxX: 0.30,
+        minY: -0.30,
+        maxY: 0.30
+      }
 
-    const pupilControl = {
-      minX: -0.50,
-      maxX: 0.50,
-      minY: -0.50,
-      maxY: 0.50
-    }
+      const pupilControl = {
+        minX: -0.50,
+        maxX: 0.50,
+        minY: -0.50,
+        maxY: 0.50
+      }
 
-    const eyeControl = {
-      minX: -0.50,
-      maxX: 0.50,
-      minY: -0.50,
-      maxY: 0.50
-    }
+      const eyeControl = {
+        minX: -0.50,
+        maxX: 0.50,
+        minY: -0.50,
+        maxY: 0.50
+      }
 
-    // for the min and max value, we can look here:
-    // https://github.com/fofr/cog-expression-editor/blob/main/predict.py
+      // regardless of the landmark, those rule will apply
+      if (isFollowingCursor) {
+        // displacing the face horizontally by moving the mouse on the X axis
+        // should perform a yaw rotation
+        // rotate_yaw (min: -20, max: 20, default: 0)
+        const yawMin = -40;
+        const yawMax = 40;
 
-    // regardless of the landmark, those rule will apply
-    if (isFollowingCursor) {
-      // displacing the face horizontally by moving the mouse on the X axis
-      // should perform a yaw rotation
-      // rotate_yaw (min: -20, max: 20, default: 0)
-      const yawMin = -40
-      const yawMax = 40
+        // note: we invert the axis here
+        params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
 
-      // note: we invert the axis here
-      params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
+        // displacing the face vertically by moving the mouse on the Y axis
+        // should perform a pitch rotation
+        // rotate_pitch (min: -20, max: 20, default: 0)
+        const pitchMin = -40;
+        const pitchMax = 40;
+        params.rotate_pitch = mapRange(vector.y, generalControl.minY, generalControl.maxY, pitchMin, pitchMax);
+      }
 
-      // displacing the face vertically by moving the mouse on the Y axis
-      // should perform a pitch rotation
-      // rotate_pitch (min: -20, max: 20, default: 0)
-      const pitchMin = -40
-      const pitchMax = 40
-      params.rotate_pitch = mapRange(vector.y, generalControl.minY, generalControl.maxY, pitchMin, pitchMax);
-    }
+      if (isGazingAtCursor) {
+        const pupilsXMin = -15;
+        const pupilsXMax = 15;
+        params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
+        const pupilsYMin = -2; // -15
+        const pupilsYMax = 8; // 15
+        params.pupil_y = mapRange(-vector.y, pupilControl.minY, pupilControl.maxY, pupilsYMin, pupilsYMax);
+      }
 
-    if (isGazingAtCursor) {
-      const pupilsXMin = -15
-      const pupilsXMax = 15
-      params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
-      const pupilsYMin = -2 // -15
-      const pupilsYMax = 8 // 15
-      params.pupil_y = mapRange(-vector.y, pupilControl.minY, pupilControl.maxY, pupilsYMin, pupilsYMax);
-    }
-
-    // if the user clicked on the primary or secondary button,
-    // then it triggers some more things
-    if (mode !== 'HOVERING') {
-      switch (landmark.group) {
-        case 'leftEye':
-        case 'rightEye':
-         // if (mode === 'PRIMARY') {
-            const pupilsXMin = -15
-            const pupilsXMax = 15
+      // if the user clicked on the primary or secondary button,
+      // then it triggers some more things
+      if (mode !== 'HOVERING') {
+        switch (landmark.group) {
+          case 'leftEye':
+          case 'rightEye':
+            const pupilsXMin = -15;
+            const pupilsXMax = 15;
             params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
 
-            const eyesMin = -20
-            const eyesMax = 5
+            const eyesMin = -20;
+            const eyesMax = 5;
             params.eyes = mapRange(-vector.y, eyeControl.minX, eyeControl.maxX, eyesMin, eyesMax);
-          //}
+            break;
 
-          break;
-        case 'leftEyebrow':
-        case 'rightEyebrow':
-          // moving the mouse vertically for the eyebrow
-          // should make them up/down
-          // eyebrow (min: -10, max: 15, default: 0)
-          const eyebrowMin = -10
-          const eyebrowMax = 15
-          params.eyebrow = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, eyebrowMin, eyebrowMax);
+          case 'leftEyebrow':
+          case 'rightEyebrow':
+            // moving the mouse vertically for the eyebrow
+            // should make them up/down
+            // eyebrow (min: -10, max: 15, default: 0)
+            const eyebrowMin = -10;
+            const eyebrowMax = 15;
+            params.eyebrow = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, eyebrowMin, eyebrowMax);
+            break;
 
-          break;
-        case 'lips':
-          // aaa (min: -30, max: 120, default: 0)
-          const aaaMin = -30
-          const aaaMax = 120
-          params.aaa = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, aaaMin, aaaMax);
+          case 'lips':
+            // aaa (min: -30, max: 120, default: 0)
+            const aaaMin = -30;
+            const aaaMax = 120;
+            params.aaa = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, aaaMin, aaaMax);
 
-          // eee (min: -20, max: 15, default: 0)
-          const eeeMin = -20
-          const eeeMax = 15
-          params.eee = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, eeeMin, eeeMax);
+            // eee (min: -20, max: 15, default: 0)
+            const eeeMin = -20;
+            const eeeMax = 15;
+            params.eee = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, eeeMin, eeeMax);
 
-          // woo (min: -20, max: 15, default: 0)
-          //const wooMin = -20
-          //const wooMax = 15
-          //params.woo = mapRange(-vector.x, eyeControl.minX, eyeControl.maxX, wooMin, wooMax);
+            // woo (min: -20, max: 15, default: 0)
+            //const wooMin = -20;
+            //const wooMax = 15;
+            //params.woo = mapRange(-vector.x, eyeControl.minX, eyeControl.maxX, wooMin, wooMax);
+            break;
 
-          break;
-        case 'faceOval':
+          case 'faceOval':
             // displacing the face horizontally by moving the mouse on the X axis
             // should perform a yaw rotation
             // rotate_roll (min: -20, max: 20, default: 0)
-            const rollMin = -40
-            const rollMax = 40
+            const rollMin = -40;
+            const rollMax = 40;
 
             // note: we invert the axis here
             params.rotate_roll = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, rollMin, rollMax);
             break;
 
-        case 'background':
-          // displacing the face horizontally by moving the mouse on the X axis
-          // should perform a yaw rotation
-          // rotate_yaw (min: -20, max: 20, default: 0)
-          const yawMin = -40
-          const yawMax = 40
+          case 'background':
+            // displacing the face horizontally by moving the mouse on the X axis
+            // should perform a yaw rotation
+            // rotate_yaw (min: -20, max: 20, default: 0)
+            const yawMin = -40;
+            const yawMax = 40;
 
-          // note: we invert the axis here
-          params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
+            // note: we invert the axis here
+            params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
 
-          // displacing the face vertically by moving the mouse on the Y axis
-          // should perform a pitch rotation
-          // rotate_pitch (min: -20, max: 20, default: 0)
-          const pitchMin = -40
-          const pitchMax = 40
-          params.rotate_pitch = mapRange(vector.y, eyeControl.minY, eyeControl.maxY, pitchMin, pitchMax);
-          break;
-        default:
-          return
+            // displacing the face vertically by moving the mouse on the Y axis
+            // should perform a pitch rotation
+            // rotate_pitch (min: -20, max: 20, default: 0)
+            const pitchMin = -40;
+            const pitchMax = 40;
+            params.rotate_pitch = mapRange(vector.y, eyeControl.minY, eyeControl.maxY, pitchMin, pitchMax);
+            break;
+
+          default:
+            return;
+        }
       }
     }
 
+    // Validate all parameters before sending
     for (const [key, value] of Object.entries(params)) {
       if (isNaN(value as any) || !isFinite(value as any)) {
-        console.log(`${key} is NaN, aborting`)
-        return
+        console.log(`${key} is NaN, aborting`);
+        return;
       }
     }
 
-    //console.log(`PITCH=${params.rotate_pitch || 0}, YAW=${params.rotate_yaw || 0}, ROLL=${params.rotate_roll || 0}`);
-
-    setParams(params)
+    setParams(params);
 
     try {
-
       if (originalImageUuid) {
         facePoke.transformImage(originalImageUuid, params);
       }
-
     } catch (error) {
-      // console.error('Error modifying image:', error);
       setError('Failed to modify image');
     }
-  },
+  }
 }))

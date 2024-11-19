@@ -10,6 +10,9 @@ import { Spinner } from './components/Spinner';
 import { useFacePokeAPI } from './hooks/useFacePokeAPI';
 import { Layout } from './layout';
 import { useMainStore } from './hooks/useMainStore';
+import WebcamControl from './components/WebcamControl';
+import { LandmarkDifferential } from './lib/landmarkDifferential';
+import type { NormalizedLandmark } from '@mediapipe/tasks-vision';
 
 export function App() {
   const error = useMainStore(s => s.error);
@@ -24,6 +27,11 @@ export function App() {
   const previewImage = useMainStore(s => s.previewImage);
   const status = useMainStore(s => s.status);
   const blendShapes = useMainStore(s => s.blendShapes);
+  const faceLandmarks = useMainStore(s => s.faceLandmarks);
+  const modifyImage = useMainStore(s => s.modifyImage);
+
+  // New state for webcam control
+  const [isWebcamMode, setIsWebcamMode] = useState(false);
 
   const {
     isDebugMode,
@@ -43,8 +51,26 @@ export function App() {
     currentOpacity
   } = useFaceLandmarkDetection()
 
-  // Refs
-  const videoRef = useRef<HTMLDivElement>(null);
+  // Handle webcam landmarks update
+  const handleWebcamLandmarks = useCallback((webcanLandmarks: NormalizedLandmark[][]) => {
+    if (!faceLandmarks.length || !webcanLandmarks.length) return;
+
+    const params = LandmarkDifferential.calculateTransformParams({
+      source: faceLandmarks,
+      target: webcanLandmarks
+    });
+
+    modifyImage({
+      landmark: {
+        group: 'background',
+        distance: 0,
+        vector: { x: 0, y: 0, z: 0 }
+      },
+      vector: { x: 0, y: 0, z: 0 },
+      mode: 'PRIMARY',
+      params
+    });
+  }, [faceLandmarks, modifyImage]);
 
   // Handle file change
   const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,69 +89,70 @@ export function App() {
     }
   }, [previewImage]);
 
-  const canDisplayBlendShapes = false
+  const canDisplayBlendShapes = false;
 
   // Display blend shapes
   const displayBlendShapes = useMemo(() => (
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold mb-2">Blend Shapes</h3>
-        <ul className="space-y-1">
-          {(blendShapes?.[0]?.categories || []).map((shape, index) => (
-            <li key={index} className="flex items-center">
-              <span className="w-32 text-sm">{shape.categoryName || shape.displayName}</span>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-blue-600 h-2.5 rounded-full"
-                  style={{ width: `${shape.score * 100}%` }}
-                ></div>
-              </div>
-              <span className="ml-2 text-sm">{shape.score.toFixed(2)}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="mt-4">
+      <h3 className="text-lg font-semibold mb-2">Blend Shapes</h3>
+      <ul className="space-y-1">
+        {(blendShapes?.[0]?.categories || []).map((shape, index) => (
+          <li key={index} className="flex items-center">
+            <span className="w-32 text-sm">{shape.categoryName || shape.displayName}</span>
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div
+                className="bg-blue-600 h-2.5 rounded-full"
+                style={{ width: `${shape.score * 100}%` }}
+              ></div>
+            </div>
+            <span className="ml-2 text-sm">{shape.score.toFixed(2)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   ), [JSON.stringify(blendShapes)])
 
   // JSX
   return (
     <Layout>
-        {error && (
-          <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        {interruptMessage && (
-          <Alert>
-            <AlertTitle>Notice</AlertTitle>
-            <AlertDescription>{interruptMessage}</AlertDescription>
-          </Alert>
-        )}
-        <div className="mb-4 relative">
-          <div className="flex flex-row items-center justify-between w-full">
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center justify-center">
-                <input
-                  id="imageInput"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  disabled={!isMediaPipeReady}
-                />
-                <label
-                  htmlFor="imageInput"
-                  className={`cursor-pointer inline-flex items-center border border-transparent font-medium rounded-md text-white ${
-                    imageFile ? 'text-xs px-2 h-8' : 'text-lg px-4 h-12'
-                  } ${
-                    isMediaPipeReady ? 'bg-slate-600 hover:bg-slate-500' : 'bg-slate-500 cursor-not-allowed'
-                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`}
-                >
-                  <PiImageSquare className="w-4 h-4 mr-1.5" />
-                  {imageFile ? `Replace` : (isMediaPipeReady ? 'Choose a portrait photo' : 'Initializing...')}
-                </label>
-              </div>
-              {previewImage && (
+      {error && (
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {interruptMessage && (
+        <Alert>
+          <AlertTitle>Notice</AlertTitle>
+          <AlertDescription>{interruptMessage}</AlertDescription>
+        </Alert>
+      )}
+      <div className="mb-4 relative">
+        <div className="flex flex-row items-center justify-between w-full">
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-center">
+              <input
+                id="imageInput"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={!isMediaPipeReady}
+              />
+              <label
+                htmlFor="imageInput"
+                className={`cursor-pointer inline-flex items-center border border-transparent font-medium rounded-md text-white ${
+                  imageFile ? 'text-xs px-2 h-8' : 'text-lg px-4 h-12'
+                } ${
+                  isMediaPipeReady ? 'bg-slate-600 hover:bg-slate-500' : 'bg-slate-500 cursor-not-allowed'
+                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`}
+              >
+                <PiImageSquare className="w-4 h-4 mr-1.5" />
+                {imageFile ? `Replace` : (isMediaPipeReady ? 'Choose a portrait photo' : 'Initializing...')}
+              </label>
+            </div>
+            {previewImage && (
+              <>
                 <button
                   onClick={handleDownload}
                   className="inline-flex items-center px-2 h-8 border border-transparent text-xs font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl"
@@ -133,81 +160,86 @@ export function App() {
                   <FiDownload className="w-4 h-4 mr-1.5" />
                   Download
                 </button>
-              )}
-            </div>
-            {previewImage && <div className="flex items-center space-x-2">
-              {/* experimental features, not active yet */}
-              {/*
-              <label className="mt-4 flex items-center">
-                <input
-                  type="checkbox"
-                  checked={isGazingAtCursor}
-                  onChange={(e) => setIsGazingAtCursor(!isGazingAtCursor)}
-                  className="mr-2"
+                <WebcamControl
+                  onLandmarksUpdate={handleWebcamLandmarks}
+                  isEnabled={!!previewImage}
                 />
-                Autotrack eyes
-              </label>
-              <label className="mt-4 flex items-center">
-                <input
-                  type="checkbox"
-                  checked={isFollowingCursor}
-                  onChange={(e) => setIsFollowingCursor(!isFollowingCursor)}
-                  className="mr-2"
-                />
-                Autotrack head
-              </label>
-              */}
-              <label className="mt-2 flex items-center text-sm mr-2">
-                <input
-                  type="checkbox"
-                  checked={isDebugMode}
-                  onChange={(e) => setIsDebugMode(e.target.checked)}
-                  className="mr-2"
-                />
-                Show face markers
-              </label>
-            </div>}
+              </>
+            )}
           </div>
-          {previewImage && (
-            <div className="mt-2 relative shadow-2xl rounded-xl overflow-hidden">
-              <img
-                src={previewImage}
-                alt="Preview"
-                className="w-full"
+          {previewImage && <div className="flex items-center space-x-2">
+            {/* experimental features, not active yet */}
+            {/*
+            <label className="mt-4 flex items-center">
+              <input
+                type="checkbox"
+                checked={isGazingAtCursor}
+                onChange={(e) => setIsGazingAtCursor(!isGazingAtCursor)}
+                className="mr-2"
               />
-              <canvas
-                ref={canvasRefCallback}
-                className="absolute top-0 left-0 w-full h-full select-none"
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-                onTouchStart={(e) => {
-                  e.preventDefault(); // Prevent default touch behavior on canvas
-                  handleTouchStart(e);
-                }}
-                onTouchMove={(e) => {
-                  e.preventDefault(); // Prevent default touch behavior on canvas
-                  handleTouchMove(e);
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault(); // Prevent default touch behavior on canvas
-                  handleTouchEnd(e);
-                }}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  opacity: isDebugMode ? currentOpacity : 0.0,
-                  transition: 'opacity 0.2s ease-in-out'
-                }}
+              Autotrack eyes
+            </label>
+            <label className="mt-4 flex items-center">
+              <input
+                type="checkbox"
+                checked={isFollowingCursor}
+                onChange={(e) => setIsFollowingCursor(!isFollowingCursor)}
+                className="mr-2"
               />
-            </div>
-          )}
-          {canDisplayBlendShapes && displayBlendShapes}
+              Autotrack head
+            </label>
+            */}
+            <label className="mt-2 flex items-center text-sm mr-2">
+              <input
+                type="checkbox"
+                checked={isDebugMode}
+                onChange={(e) => setIsDebugMode(e.target.checked)}
+                className="mr-2"
+              />
+              Show face markers
+            </label>
+          </div>}
         </div>
-        <About />
+        {previewImage && (
+          <div className="mt-2 relative shadow-2xl rounded-xl overflow-hidden">
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="w-full"
+            />
+            <canvas
+              ref={canvasRefCallback}
+              className="absolute top-0 left-0 w-full h-full select-none"
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              onTouchStart={(e) => {
+                e.preventDefault(); // Prevent default touch behavior on canvas
+                handleTouchStart(e);
+              }}
+              onTouchMove={(e) => {
+                e.preventDefault(); // Prevent default touch behavior on canvas
+                handleTouchMove(e);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault(); // Prevent default touch behavior on canvas
+                handleTouchEnd(e);
+              }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                opacity: isDebugMode ? currentOpacity : 0.0,
+                transition: 'opacity 0.2s ease-in-out'
+              }}
+            />
+          </div>
+        )}
+        {canDisplayBlendShapes && displayBlendShapes}
+      </div>
+      <About />
     </Layout>
   );
 }

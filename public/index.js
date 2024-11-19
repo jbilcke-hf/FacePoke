@@ -23683,7 +23683,7 @@ var require_lodash = __commonJS((exports, module) => {
 var client = __toESM(require_client(), 1);
 
 // src/app.tsx
-var import_react10 = __toESM(require_react(), 1);
+var import_react13 = __toESM(require_react(), 1);
 
 // node_modules/react-icons/lib/iconBase.mjs
 var import_react2 = __toESM(require_react(), 1);
@@ -30133,7 +30133,7 @@ var useMainStore = create((set, get) => ({
       originalImg.src = originalImage;
     });
   },
-  modifyImage: async ({ landmark, vector, mode }) => {
+  modifyImage: async ({ landmark, vector, mode, params: directParams }) => {
     const {
       originalImage,
       originalImageUuid,
@@ -30148,82 +30148,85 @@ var useMainStore = create((set, get) => ({
       return;
     }
     const params = {
-      ...previousParams
+      ...previousParams,
+      ...directParams || {}
     };
-    const generalControl = {
-      minX: -0.3,
-      maxX: 0.3,
-      minY: -0.3,
-      maxY: 0.3
-    };
-    const pupilControl = {
-      minX: -0.5,
-      maxX: 0.5,
-      minY: -0.5,
-      maxY: 0.5
-    };
-    const eyeControl = {
-      minX: -0.5,
-      maxX: 0.5,
-      minY: -0.5,
-      maxY: 0.5
-    };
-    if (isFollowingCursor) {
-      const yawMin = -40;
-      const yawMax = 40;
-      params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
-      const pitchMin = -40;
-      const pitchMax = 40;
-      params.rotate_pitch = mapRange(vector.y, generalControl.minY, generalControl.maxY, pitchMin, pitchMax);
-    }
-    if (isGazingAtCursor) {
-      const pupilsXMin = -15;
-      const pupilsXMax = 15;
-      params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
-      const pupilsYMin = -2;
-      const pupilsYMax = 8;
-      params.pupil_y = mapRange(-vector.y, pupilControl.minY, pupilControl.maxY, pupilsYMin, pupilsYMax);
-    }
-    if (mode !== "HOVERING") {
-      switch (landmark.group) {
-        case "leftEye":
-        case "rightEye":
-          const pupilsXMin = -15;
-          const pupilsXMax = 15;
-          params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
-          const eyesMin = -20;
-          const eyesMax = 5;
-          params.eyes = mapRange(-vector.y, eyeControl.minX, eyeControl.maxX, eyesMin, eyesMax);
-          break;
-        case "leftEyebrow":
-        case "rightEyebrow":
-          const eyebrowMin = -10;
-          const eyebrowMax = 15;
-          params.eyebrow = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, eyebrowMin, eyebrowMax);
-          break;
-        case "lips":
-          const aaaMin = -30;
-          const aaaMax = 120;
-          params.aaa = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, aaaMin, aaaMax);
-          const eeeMin = -20;
-          const eeeMax = 15;
-          params.eee = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, eeeMin, eeeMax);
-          break;
-        case "faceOval":
-          const rollMin = -40;
-          const rollMax = 40;
-          params.rotate_roll = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, rollMin, rollMax);
-          break;
-        case "background":
-          const yawMin = -40;
-          const yawMax = 40;
-          params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
-          const pitchMin = -40;
-          const pitchMax = 40;
-          params.rotate_pitch = mapRange(vector.y, eyeControl.minY, eyeControl.maxY, pitchMin, pitchMax);
-          break;
-        default:
-          return;
+    if (!directParams) {
+      const generalControl = {
+        minX: -0.3,
+        maxX: 0.3,
+        minY: -0.3,
+        maxY: 0.3
+      };
+      const pupilControl = {
+        minX: -0.5,
+        maxX: 0.5,
+        minY: -0.5,
+        maxY: 0.5
+      };
+      const eyeControl = {
+        minX: -0.5,
+        maxX: 0.5,
+        minY: -0.5,
+        maxY: 0.5
+      };
+      if (isFollowingCursor) {
+        const yawMin = -40;
+        const yawMax = 40;
+        params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
+        const pitchMin = -40;
+        const pitchMax = 40;
+        params.rotate_pitch = mapRange(vector.y, generalControl.minY, generalControl.maxY, pitchMin, pitchMax);
+      }
+      if (isGazingAtCursor) {
+        const pupilsXMin = -15;
+        const pupilsXMax = 15;
+        params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
+        const pupilsYMin = -2;
+        const pupilsYMax = 8;
+        params.pupil_y = mapRange(-vector.y, pupilControl.minY, pupilControl.maxY, pupilsYMin, pupilsYMax);
+      }
+      if (mode !== "HOVERING") {
+        switch (landmark.group) {
+          case "leftEye":
+          case "rightEye":
+            const pupilsXMin = -15;
+            const pupilsXMax = 15;
+            params.pupil_x = mapRange(vector.x, pupilControl.minX, pupilControl.maxX, pupilsXMin, pupilsXMax);
+            const eyesMin = -20;
+            const eyesMax = 5;
+            params.eyes = mapRange(-vector.y, eyeControl.minX, eyeControl.maxX, eyesMin, eyesMax);
+            break;
+          case "leftEyebrow":
+          case "rightEyebrow":
+            const eyebrowMin = -10;
+            const eyebrowMax = 15;
+            params.eyebrow = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, eyebrowMin, eyebrowMax);
+            break;
+          case "lips":
+            const aaaMin = -30;
+            const aaaMax = 120;
+            params.aaa = mapRange(-vector.y, eyeControl.minY, eyeControl.maxY, aaaMin, aaaMax);
+            const eeeMin = -20;
+            const eeeMax = 15;
+            params.eee = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, eeeMin, eeeMax);
+            break;
+          case "faceOval":
+            const rollMin = -40;
+            const rollMax = 40;
+            params.rotate_roll = mapRange(vector.x, eyeControl.minX, eyeControl.maxX, rollMin, rollMax);
+            break;
+          case "background":
+            const yawMin = -40;
+            const yawMax = 40;
+            params.rotate_yaw = mapRange(-vector.x, generalControl.minX, generalControl.maxX, yawMin, yawMax);
+            const pitchMin = -40;
+            const pitchMax = 40;
+            params.rotate_pitch = mapRange(vector.y, eyeControl.minY, eyeControl.maxY, pitchMin, pitchMax);
+            break;
+          default:
+            return;
+        }
       }
     }
     for (const [key, value] of Object.entries(params)) {
@@ -33511,8 +33514,258 @@ function Layout({ children }) {
   }, undefined, true, undefined, this);
 }
 
-// src/app.tsx
+// src/components/WebcamControl.tsx
+var import_react12 = __toESM(require_react(), 1);
+
+// node_modules/lucide-react/dist/esm/createLucideIcon.js
+var import_react11 = __toESM(require_react(), 1);
+
+// node_modules/lucide-react/dist/esm/shared/src/utils.js
+var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+var mergeClasses = (...classes) => classes.filter((className, index, array) => {
+  return Boolean(className) && array.indexOf(className) === index;
+}).join(" ");
+
+// node_modules/lucide-react/dist/esm/Icon.js
+var import_react10 = __toESM(require_react(), 1);
+
+// node_modules/lucide-react/dist/esm/defaultAttributes.js
+var defaultAttributes = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: 24,
+  height: 24,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+};
+
+// node_modules/lucide-react/dist/esm/Icon.js
+var Icon = import_react10.forwardRef(({
+  color = "currentColor",
+  size = 24,
+  strokeWidth = 2,
+  absoluteStrokeWidth,
+  className = "",
+  children,
+  iconNode,
+  ...rest
+}, ref) => {
+  return import_react10.createElement("svg", {
+    ref,
+    ...defaultAttributes,
+    width: size,
+    height: size,
+    stroke: color,
+    strokeWidth: absoluteStrokeWidth ? Number(strokeWidth) * 24 / Number(size) : strokeWidth,
+    className: mergeClasses("lucide", className),
+    ...rest
+  }, [
+    ...iconNode.map(([tag, attrs]) => import_react10.createElement(tag, attrs)),
+    ...Array.isArray(children) ? children : [children]
+  ]);
+});
+
+// node_modules/lucide-react/dist/esm/createLucideIcon.js
+var createLucideIcon = (iconName, iconNode) => {
+  const Component = import_react11.forwardRef(({ className, ...props }, ref) => import_react11.createElement(Icon, {
+    ref,
+    iconNode,
+    className: mergeClasses(`lucide-${toKebabCase(iconName)}`, className),
+    ...props
+  }));
+  Component.displayName = `${iconName}`;
+  return Component;
+};
+
+// node_modules/lucide-react/dist/esm/icons/camera-off.js
+var CameraOff = createLucideIcon("CameraOff", [
+  ["line", { x1: "2", x2: "22", y1: "2", y2: "22", key: "a6p6uj" }],
+  ["path", { d: "M7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16", key: "qmtpty" }],
+  ["path", { d: "M9.5 4h5L17 7h3a2 2 0 0 1 2 2v7.5", key: "1ufyfc" }],
+  ["path", { d: "M14.121 15.121A3 3 0 1 1 9.88 10.88", key: "11zox6" }]
+]);
+
+// node_modules/lucide-react/dist/esm/icons/camera.js
+var Camera = createLucideIcon("Camera", [
+  [
+    "path",
+    {
+      d: "M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z",
+      key: "1tc9qg"
+    }
+  ],
+  ["circle", { cx: "12", cy: "13", r: "3", key: "1vg3eu" }]
+]);
+// src/components/WebcamControl.tsx
 var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
+function WebcamControl({ onLandmarksUpdate, isEnabled = false }) {
+  const [isWebcamActive, setIsWebcamActive] = import_react12.useState(false);
+  const [isMediaPipeReady, setIsMediaPipeReady] = import_react12.useState(false);
+  const videoRef = import_react12.useRef(null);
+  const faceLandmarkerRef = import_react12.useRef(null);
+  const animationFrameRef = import_react12.useRef();
+  import_react12.useEffect(() => {
+    const initializeMediaPipe = async () => {
+      const filesetResolver = await Uo.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+      const faceLandmarker = await lh.createFromOptions(filesetResolver, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+          delegate: "GPU"
+        },
+        outputFaceBlendshapes: true,
+        runningMode: "VIDEO",
+        numFaces: 1
+      });
+      faceLandmarkerRef.current = faceLandmarker;
+      setIsMediaPipeReady(true);
+    };
+    initializeMediaPipe();
+    return () => {
+      if (faceLandmarkerRef.current) {
+        faceLandmarkerRef.current.close();
+      }
+    };
+  }, []);
+  import_react12.useEffect(() => {
+    if (!isWebcamActive || !isEnabled)
+      return;
+    const startWebcam = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: 640,
+            height: 480,
+            facingMode: "user"
+          }
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error("Error accessing webcam:", err);
+        setIsWebcamActive(false);
+      }
+    };
+    startWebcam();
+    return () => {
+      const stream = videoRef.current?.srcObject;
+      stream?.getTracks().forEach((track) => track.stop());
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, [isWebcamActive, isEnabled]);
+  import_react12.useEffect(() => {
+    if (!isWebcamActive || !isMediaPipeReady || !faceLandmarkerRef.current || !videoRef.current)
+      return;
+    const processFrame = async () => {
+      if (!videoRef.current || !faceLandmarkerRef.current)
+        return;
+      if (videoRef.current.readyState === 4) {
+        const startTimeMs = performance.now();
+        const results = faceLandmarkerRef.current.detectForVideo(videoRef.current, startTimeMs);
+        if (results.faceLandmarks.length > 0) {
+          onLandmarksUpdate?.(results.faceLandmarks);
+        }
+      }
+      animationFrameRef.current = requestAnimationFrame(processFrame);
+    };
+    processFrame();
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isWebcamActive, isMediaPipeReady, onLandmarksUpdate]);
+  const toggleWebcam = () => {
+    setIsWebcamActive(!isWebcamActive);
+  };
+  return jsx_dev_runtime4.jsxDEV(jsx_dev_runtime4.Fragment, {
+    children: [
+      jsx_dev_runtime4.jsxDEV("button", {
+        onClick: toggleWebcam,
+        disabled: !isEnabled || !isMediaPipeReady,
+        className: `inline-flex items-center px-2 h-8 border border-transparent text-xs font-medium rounded-md text-white ${isEnabled && isMediaPipeReady ? "bg-zinc-600 hover:bg-zinc-500" : "bg-zinc-500 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl`,
+        children: [
+          isWebcamActive ? jsx_dev_runtime4.jsxDEV(CameraOff, {
+            className: "w-4 h-4 mr-1.5"
+          }, undefined, false, undefined, this) : jsx_dev_runtime4.jsxDEV(Camera, {
+            className: "w-4 h-4 mr-1.5"
+          }, undefined, false, undefined, this),
+          isWebcamActive ? "Stop Camera" : "Start Camera"
+        ]
+      }, undefined, true, undefined, this),
+      jsx_dev_runtime4.jsxDEV("video", {
+        ref: videoRef,
+        autoPlay: true,
+        playsInline: true,
+        muted: true,
+        className: "hidden",
+        width: "640",
+        height: "480"
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+}
+
+// src/lib/landmarkDifferential.ts
+class LandmarkDifferential {
+  static ROTATION_SCALE = 40;
+  static EXPRESSION_SCALE = 100;
+  static calculateTransformParams(diff) {
+    const params = {};
+    if (!diff.source[0] || !diff.target[0])
+      return params;
+    const sourceLandmarks = diff.source[0];
+    const targetLandmarks = diff.target[0];
+    params.rotate_yaw = this.calculateYawRotation(sourceLandmarks, targetLandmarks);
+    params.rotate_pitch = this.calculatePitchRotation(sourceLandmarks, targetLandmarks);
+    params.rotate_roll = this.calculateRollRotation(sourceLandmarks, targetLandmarks);
+    params.eyes = this.calculateEyeOpening(sourceLandmarks, targetLandmarks);
+    params.smile = this.calculateSmile(sourceLandmarks, targetLandmarks);
+    params.eyebrow = this.calculateEyebrowRaise(sourceLandmarks, targetLandmarks);
+    return params;
+  }
+  static calculateYawRotation(source, target) {
+    const sourceNose = source[6];
+    const targetNose = target[6];
+    const diff = targetNose.x - sourceNose.x;
+    return diff * this.ROTATION_SCALE;
+  }
+  static calculatePitchRotation(source, target) {
+    const sourceNose = source[4];
+    const targetNose = target[4];
+    const diff = targetNose.y - sourceNose.y;
+    return diff * this.ROTATION_SCALE;
+  }
+  static calculateRollRotation(source, target) {
+    const sourceAngle = Math.atan2(source[263].y - source[33].y, source[263].x - source[33].x);
+    const targetAngle = Math.atan2(target[263].y - target[33].y, target[263].x - target[33].x);
+    const diff = targetAngle - sourceAngle;
+    return diff * 180 / Math.PI * this.ROTATION_SCALE;
+  }
+  static calculateEyeOpening(source, target) {
+    const sourceEyeGap = source[374].y - source[386].y;
+    const targetEyeGap = target[374].y - target[386].y;
+    return (targetEyeGap - sourceEyeGap) / sourceEyeGap * this.EXPRESSION_SCALE;
+  }
+  static calculateSmile(source, target) {
+    const sourceMouthWidth = Math.abs(source[61].x - source[291].x);
+    const targetMouthWidth = Math.abs(target[61].x - target[291].x);
+    return (targetMouthWidth - sourceMouthWidth) / sourceMouthWidth * this.EXPRESSION_SCALE;
+  }
+  static calculateEyebrowRaise(source, target) {
+    const sourceDistance = Math.abs(source[282].y - source[374].y);
+    const targetDistance = Math.abs(target[282].y - target[374].y);
+    return (targetDistance - sourceDistance) / sourceDistance * this.EXPRESSION_SCALE;
+  }
+}
+
+// src/app.tsx
+var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
 function App() {
   const error = useMainStore((s2) => s2.error);
   const setError = useMainStore((s2) => s2.setError);
@@ -33525,6 +33778,9 @@ function App() {
   const previewImage = useMainStore((s2) => s2.previewImage);
   const status = useMainStore((s2) => s2.status);
   const blendShapes = useMainStore((s2) => s2.blendShapes);
+  const faceLandmarks = useMainStore((s2) => s2.faceLandmarks);
+  const modifyImage = useMainStore((s2) => s2.modifyImage);
+  const [isWebcamMode, setIsWebcamMode] = import_react13.useState(false);
   const {
     isDebugMode,
     setIsDebugMode,
@@ -33541,12 +33797,29 @@ function App() {
     handleTouchEnd,
     currentOpacity
   } = useFaceLandmarkDetection();
-  const videoRef = import_react10.useRef(null);
-  const handleFileChange = import_react10.useCallback((event) => {
+  const handleWebcamLandmarks = import_react13.useCallback((webcanLandmarks) => {
+    if (!faceLandmarks.length || !webcanLandmarks.length)
+      return;
+    const params = LandmarkDifferential.calculateTransformParams({
+      source: faceLandmarks,
+      target: webcanLandmarks
+    });
+    modifyImage({
+      landmark: {
+        group: "background",
+        distance: 0,
+        vector: { x: 0, y: 0, z: 0 }
+      },
+      vector: { x: 0, y: 0, z: 0 },
+      mode: "PRIMARY",
+      params
+    });
+  }, [faceLandmarks, modifyImage]);
+  const handleFileChange = import_react13.useCallback((event) => {
     const files = event.target.files;
     setImageFile(files?.[0] || undefined);
   }, [setImageFile]);
-  const handleDownload = import_react10.useCallback(() => {
+  const handleDownload = import_react13.useCallback(() => {
     if (previewImage) {
       const link = document.createElement("a");
       link.href = previewImage;
@@ -33557,30 +33830,30 @@ function App() {
     }
   }, [previewImage]);
   const canDisplayBlendShapes = false;
-  const displayBlendShapes = import_react10.useMemo(() => jsx_dev_runtime4.jsxDEV("div", {
+  const displayBlendShapes = import_react13.useMemo(() => jsx_dev_runtime5.jsxDEV("div", {
     className: "mt-4",
     children: [
-      jsx_dev_runtime4.jsxDEV("h3", {
+      jsx_dev_runtime5.jsxDEV("h3", {
         className: "text-lg font-semibold mb-2",
         children: "Blend Shapes"
       }, undefined, false, undefined, this),
-      jsx_dev_runtime4.jsxDEV("ul", {
+      jsx_dev_runtime5.jsxDEV("ul", {
         className: "space-y-1",
-        children: (blendShapes?.[0]?.categories || []).map((shape, index) => jsx_dev_runtime4.jsxDEV("li", {
+        children: (blendShapes?.[0]?.categories || []).map((shape, index) => jsx_dev_runtime5.jsxDEV("li", {
           className: "flex items-center",
           children: [
-            jsx_dev_runtime4.jsxDEV("span", {
+            jsx_dev_runtime5.jsxDEV("span", {
               className: "w-32 text-sm",
               children: shape.categoryName || shape.displayName
             }, undefined, false, undefined, this),
-            jsx_dev_runtime4.jsxDEV("div", {
+            jsx_dev_runtime5.jsxDEV("div", {
               className: "w-full bg-gray-200 rounded-full h-2.5",
-              children: jsx_dev_runtime4.jsxDEV("div", {
+              children: jsx_dev_runtime5.jsxDEV("div", {
                 className: "bg-blue-600 h-2.5 rounded-full",
                 style: { width: `${shape.score * 100}%` }
               }, undefined, false, undefined, this)
             }, undefined, false, undefined, this),
-            jsx_dev_runtime4.jsxDEV("span", {
+            jsx_dev_runtime5.jsxDEV("span", {
               className: "ml-2 text-sm",
               children: shape.score.toFixed(2)
             }, undefined, false, undefined, this)
@@ -33589,42 +33862,42 @@ function App() {
       }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this), [JSON.stringify(blendShapes)]);
-  return jsx_dev_runtime4.jsxDEV(Layout, {
+  return jsx_dev_runtime5.jsxDEV(Layout, {
     children: [
-      error && jsx_dev_runtime4.jsxDEV(Alert, {
+      error && jsx_dev_runtime5.jsxDEV(Alert, {
         variant: "destructive",
         children: [
-          jsx_dev_runtime4.jsxDEV(AlertTitle, {
+          jsx_dev_runtime5.jsxDEV(AlertTitle, {
             children: "Error"
           }, undefined, false, undefined, this),
-          jsx_dev_runtime4.jsxDEV(AlertDescription, {
+          jsx_dev_runtime5.jsxDEV(AlertDescription, {
             children: error
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this),
-      interruptMessage && jsx_dev_runtime4.jsxDEV(Alert, {
+      interruptMessage && jsx_dev_runtime5.jsxDEV(Alert, {
         children: [
-          jsx_dev_runtime4.jsxDEV(AlertTitle, {
+          jsx_dev_runtime5.jsxDEV(AlertTitle, {
             children: "Notice"
           }, undefined, false, undefined, this),
-          jsx_dev_runtime4.jsxDEV(AlertDescription, {
+          jsx_dev_runtime5.jsxDEV(AlertDescription, {
             children: interruptMessage
           }, undefined, false, undefined, this)
         ]
       }, undefined, true, undefined, this),
-      jsx_dev_runtime4.jsxDEV("div", {
+      jsx_dev_runtime5.jsxDEV("div", {
         className: "mb-4 relative",
         children: [
-          jsx_dev_runtime4.jsxDEV("div", {
+          jsx_dev_runtime5.jsxDEV("div", {
             className: "flex flex-row items-center justify-between w-full",
             children: [
-              jsx_dev_runtime4.jsxDEV("div", {
+              jsx_dev_runtime5.jsxDEV("div", {
                 className: "flex items-center space-x-2",
                 children: [
-                  jsx_dev_runtime4.jsxDEV("div", {
+                  jsx_dev_runtime5.jsxDEV("div", {
                     className: "flex items-center justify-center",
                     children: [
-                      jsx_dev_runtime4.jsxDEV("input", {
+                      jsx_dev_runtime5.jsxDEV("input", {
                         id: "imageInput",
                         type: "file",
                         accept: "image/*",
@@ -33632,11 +33905,11 @@ function App() {
                         className: "hidden",
                         disabled: !isMediaPipeReady
                       }, undefined, false, undefined, this),
-                      jsx_dev_runtime4.jsxDEV("label", {
+                      jsx_dev_runtime5.jsxDEV("label", {
                         htmlFor: "imageInput",
                         className: `cursor-pointer inline-flex items-center border border-transparent font-medium rounded-md text-white ${imageFile ? "text-xs px-2 h-8" : "text-lg px-4 h-12"} ${isMediaPipeReady ? "bg-slate-600 hover:bg-slate-500" : "bg-slate-500 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-xl`,
                         children: [
-                          jsx_dev_runtime4.jsxDEV(PiImageSquare, {
+                          jsx_dev_runtime5.jsxDEV(PiImageSquare, {
                             className: "w-4 h-4 mr-1.5"
                           }, undefined, false, undefined, this),
                           imageFile ? `Replace` : isMediaPipeReady ? "Choose a portrait photo" : "Initializing..."
@@ -33644,24 +33917,32 @@ function App() {
                       }, undefined, true, undefined, this)
                     ]
                   }, undefined, true, undefined, this),
-                  previewImage && jsx_dev_runtime4.jsxDEV("button", {
-                    onClick: handleDownload,
-                    className: "inline-flex items-center px-2 h-8 border border-transparent text-xs font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl",
+                  previewImage && jsx_dev_runtime5.jsxDEV(jsx_dev_runtime5.Fragment, {
                     children: [
-                      jsx_dev_runtime4.jsxDEV(FiDownload, {
-                        className: "w-4 h-4 mr-1.5"
-                      }, undefined, false, undefined, this),
-                      "Download"
+                      jsx_dev_runtime5.jsxDEV("button", {
+                        onClick: handleDownload,
+                        className: "inline-flex items-center px-2 h-8 border border-transparent text-xs font-medium rounded-md text-white bg-zinc-600 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 shadow-xl",
+                        children: [
+                          jsx_dev_runtime5.jsxDEV(FiDownload, {
+                            className: "w-4 h-4 mr-1.5"
+                          }, undefined, false, undefined, this),
+                          "Download"
+                        ]
+                      }, undefined, true, undefined, this),
+                      jsx_dev_runtime5.jsxDEV(WebcamControl, {
+                        onLandmarksUpdate: handleWebcamLandmarks,
+                        isEnabled: !!previewImage
+                      }, undefined, false, undefined, this)
                     ]
                   }, undefined, true, undefined, this)
                 ]
               }, undefined, true, undefined, this),
-              previewImage && jsx_dev_runtime4.jsxDEV("div", {
+              previewImage && jsx_dev_runtime5.jsxDEV("div", {
                 className: "flex items-center space-x-2",
-                children: jsx_dev_runtime4.jsxDEV("label", {
+                children: jsx_dev_runtime5.jsxDEV("label", {
                   className: "mt-2 flex items-center text-sm mr-2",
                   children: [
-                    jsx_dev_runtime4.jsxDEV("input", {
+                    jsx_dev_runtime5.jsxDEV("input", {
                       type: "checkbox",
                       checked: isDebugMode,
                       onChange: (e2) => setIsDebugMode(e2.target.checked),
@@ -33673,15 +33954,15 @@ function App() {
               }, undefined, false, undefined, this)
             ]
           }, undefined, true, undefined, this),
-          previewImage && jsx_dev_runtime4.jsxDEV("div", {
+          previewImage && jsx_dev_runtime5.jsxDEV("div", {
             className: "mt-2 relative shadow-2xl rounded-xl overflow-hidden",
             children: [
-              jsx_dev_runtime4.jsxDEV("img", {
+              jsx_dev_runtime5.jsxDEV("img", {
                 src: previewImage,
                 alt: "Preview",
                 className: "w-full"
               }, undefined, false, undefined, this),
-              jsx_dev_runtime4.jsxDEV("canvas", {
+              jsx_dev_runtime5.jsxDEV("canvas", {
                 ref: canvasRefCallback,
                 className: "absolute top-0 left-0 w-full h-full select-none",
                 onMouseDown: handleMouseDown,
@@ -33714,12 +33995,12 @@ function App() {
           canDisplayBlendShapes && displayBlendShapes
         ]
       }, undefined, true, undefined, this),
-      jsx_dev_runtime4.jsxDEV(About, {}, undefined, false, undefined, this)
+      jsx_dev_runtime5.jsxDEV(About, {}, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
 }
 
 // src/index.tsx
-var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime6 = __toESM(require_jsx_dev_runtime(), 1);
 var root = client.createRoot(document.getElementById("root"));
-root.render(jsx_dev_runtime5.jsxDEV(App, {}, undefined, false, undefined, this));
+root.render(jsx_dev_runtime6.jsxDEV(App, {}, undefined, false, undefined, this));
