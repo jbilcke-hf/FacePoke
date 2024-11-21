@@ -112,6 +112,13 @@ Contributions are welcome to help supporting other platforms!
    - Connect your GitHub repository to the Space.
    - Configure the Space to use the Docker runtime.
 
+
+Note: by default Hugging Face runs the `main` branch, so if you want to push a feature branch you need to do this:
+
+```bash
+git push <space_repo> <feature_branch>:main -f
+```
+
 ## Development
 
 The project structure is organized as follows:
