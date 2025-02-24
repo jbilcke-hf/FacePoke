@@ -4,6 +4,7 @@ import gradio as gr
 import numpy as np
 import os
 import os.path as osp
+import torch
 from typing import List, Union, Tuple
 from dataclasses import dataclass, field
 import cv2; cv2.setNumThreads(0); cv2.ocl.setUseOpenCL(False)
@@ -39,19 +40,30 @@ class Trajectory:
 class Cropper(object):
     def __init__(self, **kwargs) -> None:
         device_id = kwargs.get('device_id', 0)
+        log("  ⏳ Initializing landmark runner...")
+        # Get device from kwargs or default to auto-detect
+        use_cpu = kwargs.get('use_cpu', False)
+        onnx_provider = 'CPUExecutionProvider' if use_cpu else ('CUDAExecutionProvider' if torch.cuda.is_available() else 'CPUExecutionProvider')
         self.landmark_runner = LandmarkRunner(
             ckpt_path=make_abs_path(os.path.join(MODELS_DIR, "liveportrait", "landmark.onnx")),
-            onnx_provider='cuda',
+            onnx_provider=onnx_provider,
             device_id=device_id
         )
+        log("  ✅ Landmark runner initialized")
+        log("  ⏳ Warming up landmark runner...")
         self.landmark_runner.warmup()
+        log("  ✅ Landmark runner warmup complete")
 
+        log("  ⏳ Initializing face analysis...")
+        providers = ["CPUExecutionProvider"] if use_cpu else (["CUDAExecutionProvider"] if torch.cuda.is_available() else ["CPUExecutionProvider"])
         self.face_analysis_wrapper = FaceAnalysisDIY(
             name='buffalo_l',
             root=make_abs_path(os.path.join(MODELS_DIR, "insightface")),
-            providers=["CUDAExecutionProvider"]
+            providers=providers
         )
+        log("  ⏳ Preparing face analysis...")
         self.face_analysis_wrapper.prepare(ctx_id=device_id, det_size=(512, 512))
+        log("  ✅ Face analysis initialized")
         self.face_analysis_wrapper.warmup()
 
         self.crop_cfg = kwargs.get('crop_cfg', None)
