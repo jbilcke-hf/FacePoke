@@ -48,7 +48,7 @@ It uses the face transformation routines from https://github.com/PowerHouseMan/C
 
 ### Before you install
 
-FacePoke has only been tested in a Linux environment, using `Python 3.10` and `CUDA 12.4` (so a NVIDIA GPU).
+FacePoke has only been tested in a Linux environment, using `Python 3.10` and `CUDA 12.4` (so a NVIDIA GPU). However, the application now supports both GPU and CPU environments, with GPU being used by default when available.
 
 Contributions are welcome to help supporting other platforms!
 
@@ -89,8 +89,14 @@ Contributions are welcome to help supporting other platforms!
 
 6. Start the backend server:
    ```bash
+   # Run with GPU (default)
    python app.py
+
+   # Force CPU usage
+   python app.py --cpu
    ```
+
+   The application will use GPU by default if available, with half-precision enabled for better performance. Use the `--cpu` flag to force CPU usage if needed.
 
 7. Open `http://localhost:8080` in your web browser.
 

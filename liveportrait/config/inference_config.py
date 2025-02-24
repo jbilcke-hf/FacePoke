@@ -23,7 +23,23 @@ class InferenceConfig(PrintableConfig):
     checkpoint_G = os.path.join(MODELS_DIR, "liveportrait", "spade_generator.pth")
     checkpoint_S = os.path.join(MODELS_DIR, "liveportrait", "stitching_retargeting_module.pth")
 
-    flag_use_half_precision: bool = True  # whether to use half precision
+    # Device configuration
+    use_cpu: bool = False  # If True, force CPU usage regardless of CUDA availability
+    device_id: str = None  # Will be set based on use_cpu and CUDA availability
+    flag_use_half_precision: bool = None  # Will be set based on device
+    
+    def __post_init__(self):
+        import torch
+        import os
+        
+        # Check environment variable for CPU forcing
+        force_cpu = os.environ.get('FACEPOKE_FORCE_CPU', '0') == '1'
+        self.use_cpu = self.use_cpu or force_cpu
+        
+        # Set device based on use_cpu flag and CUDA availability
+        self.device_id = "cpu" if self.use_cpu else ("cuda" if torch.cuda.is_available() else "cpu")
+        # Enable half precision only on GPU
+        self.flag_use_half_precision = (self.device_id == "cuda")
 
     flag_lip_zero: bool = True  # whether let the lip to close state before animation, only take effect when flag_eye_retargeting and flag_lip_retargeting is False
     lip_zero_threshold: float = 0.03

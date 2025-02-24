@@ -128,20 +128,33 @@ class ModelLoader:
         from liveportrait.live_portrait_pipeline import LivePortraitPipeline
 
         logger.info("  ⏳ Loading LivePortrait models...")
-        live_portrait_pipeline = await asyncio.to_thread(
-            LivePortraitPipeline,
-            inference_cfg=InferenceConfig(
+        try:
+            logger.info("    ⏳ Creating inference config...")
+            inference_cfg = InferenceConfig(
                 # default values
                 flag_stitching=True,  # we recommend setting it to True!
                 flag_relative=True,  # whether to use relative motion
                 flag_pasteback=True,  # whether to paste-back/stitch the animated face cropping from the face-cropping space to the original image space
-                flag_do_crop= True,  # whether to crop the source portrait to the face-cropping space
+                flag_do_crop=True,  # whether to crop the source portrait to the face-cropping space
                 flag_do_rot=True,  # whether to conduct the rotation when flag_do_crop is True
-            ),
-            crop_cfg=CropConfig()
-        )
-        logger.info("  ✅ LivePortrait models loaded successfully.")
-        return live_portrait_pipeline
+            )
+            logger.info("    ✅ Inference config created")
+
+            logger.info("    ⏳ Creating crop config...")
+            crop_cfg = CropConfig()
+            logger.info("    ✅ Crop config created")
+
+            logger.info("    ⏳ Initializing LivePortraitPipeline...")
+            live_portrait_pipeline = await asyncio.to_thread(
+                LivePortraitPipeline,
+                inference_cfg=inference_cfg,
+                crop_cfg=crop_cfg
+            )
+            logger.info("  ✅ LivePortrait models loaded successfully")
+            return live_portrait_pipeline
+        except Exception as e:
+            logger.error(f"Failed to load LivePortrait models: {str(e)}")
+            raise
 
 async def initialize_models():
     """Initialize and load all required models."""

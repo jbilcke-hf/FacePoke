@@ -27,7 +27,7 @@ class LandmarkRunner(object):
     """landmark runner"""
     def __init__(self, **kwargs):
         ckpt_path = kwargs.get('ckpt_path')
-        onnx_provider = kwargs.get('onnx_provider', 'cuda')  # 默认用cuda
+        onnx_provider = kwargs.get('onnx_provider', 'cpu')  # Default to CPU
         device_id = kwargs.get('device_id', 0)
         self.dsize = kwargs.get('dsize', 224)
         self.timer = Timer()
