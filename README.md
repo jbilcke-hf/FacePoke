@@ -38,6 +38,14 @@ You can try the demo but it is a shared space, latency may be high if there are 
 
 **Live Demo**: [FacePoke on Hugging Face Spaces](https://huggingface.co/spaces/jbilcke-hf/FacePoke)
 
+# Funding
+
+FacePoke is just a tiny project!
+
+There are no plans to create a proprietary/expensive cloud-only blackbox SaaS for FacePoke, so if you like it, you can buy me a coffee 🫶
+
+<a href="https://www.buymeacoffee.com/flngr" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
 ## Acknowledgements
 
 This project is based on LivePortrait: https://arxiv.org/abs/2407.03168
