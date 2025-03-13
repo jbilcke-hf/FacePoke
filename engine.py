@@ -54,13 +54,32 @@ class Engine:
         Args:
             live_portrait (LivePortraitPipeline): The LivePortrait model for video generation.
         """
-        self.live_portrait = live_portrait
+        try:
+            logger.info("  🔄 Setting up live portrait...")
+            self.live_portrait = live_portrait
+            logger.info("  ✅ Live portrait setup complete")
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            logger.info("  🔄 Configuring device settings...")
+            self.device = torch.device(live_portrait.live_portrait_wrapper.cfg.device_id)
+            if self.device.type == "cpu":
+                torch.set_num_threads(4)  # Limit number of threads for CPU
+            logger.info(f"  ✅ Device configuration complete (using {self.device})")
+            
+            logger.info("  🔄 Initializing cache...")
+            self.processed_cache = {}
+            self.max_cache_size = 10  # Limit cache size
+            logger.info("  ✅ Cache initialization complete")
 
-        self.processed_cache = {}  # Stores the processed image data
+            # Add memory cleanup
+            import gc
+            gc.collect()
+            torch.cuda.empty_cache()
+            logger.info("  ✅ Memory cleanup complete")
 
-        logger.info("✅ FacePoke Engine initialized successfully.")
+            logger.info("✅ FacePoke Engine initialized successfully")
+        except Exception as e:
+            logger.error(f"❌ Error during engine initialization: {str(e)}")
+            raise
 
     @alru_cache(maxsize=512)
     async def load_image(self, data):

@@ -7,6 +7,7 @@ Date: September 30, 2024
 
 import sys
 import asyncio
+import torch
 from aiohttp import web, WSMsgType
 import json
 from json import JSONEncoder
@@ -111,24 +112,50 @@ async def initialize_app() -> web.Application:
     """Initialize and configure the web application."""
     try:
         logger.info("Initializing application...")
-        live_portrait = await initialize_models()
+        logger.info("Starting model initialization...")
+        try:
+            # Memory cleanup before model loading
+            import gc
+            gc.collect()
+            torch.cuda.empty_cache()
+            
+            # No timeout - let it take as long as needed
+            live_portrait = await initialize_models()
+            logger.info("✅ Model initialization completed successfully")
+            
+            # Clear any unused memory
+            gc.collect()
+            torch.cuda.empty_cache()
+        except asyncio.TimeoutError:
+            logger.error("Model initialization timed out after 60 seconds")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to initialize models: {str(e)}")
+            raise
 
         logger.info("🚀 Creating Engine instance...")
-        engine = Engine(live_portrait=live_portrait)
-        logger.info("✅ Engine instance created.")
+        try:
+            logger.info("  ⏳ Initializing Engine with LivePortrait...")
+            engine = Engine(live_portrait=live_portrait)
+            logger.info("✅ Engine instance created successfully")
+            logger.info("  ⏳ Setting up application routes...")
+            
+            # Configure routes
+            app = web.Application()
+            app['engine'] = engine
+            
+            app.router.add_get("/", index)
+            app.router.add_get("/index.js", js_index)
+            app.router.add_get("/hf-logo.svg", hf_logo)
+            app.router.add_get("/ws", websocket_handler)
+            
+            logger.info("✅ Application routes configured")
+            return app
+        except Exception as e:
+            logger.error(f"Failed to create engine: {str(e)}")
+            raise
 
-        app = web.Application()
-        app['engine'] = engine
 
-        # Configure routes
-        app.router.add_get("/", index)
-        app.router.add_get("/index.js", js_index)
-        app.router.add_get("/hf-logo.svg", hf_logo)
-        app.router.add_get("/ws", websocket_handler)
-
-        logger.info("Application routes configured")
-
-        return app
     except Exception as e:
         logger.error(f"🚨 Error during application initialization: {str(e)}")
         logger.exception("Full traceback:")
@@ -136,10 +163,23 @@ async def initialize_app() -> web.Application:
 
 if __name__ == "__main__":
     try:
+        import argparse
+        parser = argparse.ArgumentParser(description='FacePoke Application')
+        parser.add_argument('--cpu', action='store_true', help='Force CPU usage even if GPU is available')
+        args = parser.parse_args()
+
         logger.info("Starting FacePoke application")
+        logger.info("Initializing application components...")
+        
+        # Pass CPU flag to InferenceConfig through environment variable
+        if args.cpu:
+            os.environ['FACEPOKE_FORCE_CPU'] = '1'
+            logger.info("🔧 Forcing CPU usage as requested")
+        
         app = asyncio.run(initialize_app())
-        logger.info("Application initialized, starting web server")
-        web.run_app(app, host="0.0.0.0", port=8080)
+        logger.info("✅ Application initialization complete")
+        logger.info("🚀 Starting web server on port 8080...")
+        web.run_app(app, host="0.0.0.0", port=8080, access_log_format='%{REMOTE_ADDR}s - "%r" %s %b "%{Referer}i" "%{User-Agent}i"')
     except Exception as e:
         logger.critical(f"🚨 FATAL: Failed to start the app: {str(e)}")
         logger.exception("Full traceback:")

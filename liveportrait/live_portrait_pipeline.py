@@ -35,8 +35,20 @@ def make_abs_path(fn):
 class LivePortraitPipeline(object):
 
     def __init__(self, inference_cfg: InferenceConfig, crop_cfg: CropConfig):
-        self.live_portrait_wrapper: LivePortraitWrapper = LivePortraitWrapper(cfg=inference_cfg)
-        self.cropper = Cropper(crop_cfg=crop_cfg)
+        log("Initializing LivePortraitPipeline...")
+        try:
+            log("  ⏳ Creating LivePortraitWrapper...")
+            self.live_portrait_wrapper: LivePortraitWrapper = LivePortraitWrapper(cfg=inference_cfg)
+            log("  ✅ LivePortraitWrapper created")
+            
+            log("  ⏳ Creating Cropper...")
+            self.cropper = Cropper(crop_cfg=crop_cfg)
+            log("  ✅ Cropper created")
+            
+            log("✅ LivePortraitPipeline initialized successfully")
+        except Exception as e:
+            log(f"❌ Error during LivePortraitPipeline initialization: {str(e)}")
+            raise
 
     def execute(self, args: ArgumentConfig):
         inference_cfg = self.live_portrait_wrapper.cfg # for convenience

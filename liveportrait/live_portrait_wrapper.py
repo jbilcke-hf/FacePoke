@@ -22,26 +22,42 @@ class LivePortraitWrapper(object):
 
     def __init__(self, cfg: InferenceConfig):
 
-        model_config = yaml.load(open(cfg.models_config, 'r'), Loader=yaml.SafeLoader)
+        try:
+            log("Loading model configuration...")
+            model_config = yaml.load(open(cfg.models_config, 'r'), Loader=yaml.SafeLoader)
+            log("✅ Model configuration loaded")
 
-        # init F
-        self.appearance_feature_extractor = load_model(cfg.checkpoint_F, model_config, cfg.device_id, 'appearance_feature_extractor')
-        #log(f'Load appearance_feature_extractor done.')
-        # init M
-        self.motion_extractor = load_model(cfg.checkpoint_M, model_config, cfg.device_id, 'motion_extractor')
-        #log(f'Load motion_extractor done.')
-        # init W
-        self.warping_module = load_model(cfg.checkpoint_W, model_config, cfg.device_id, 'warping_module')
-        #log(f'Load warping_module done.')
-        # init G
-        self.spade_generator = load_model(cfg.checkpoint_G, model_config, cfg.device_id, 'spade_generator')
-        #log(f'Load spade_generator done.')
-        # init S and R
-        if cfg.checkpoint_S is not None and osp.exists(cfg.checkpoint_S):
-            self.stitching_retargeting_module = load_model(cfg.checkpoint_S, model_config, cfg.device_id, 'stitching_retargeting_module')
-            #log(f'Load stitching_retargeting_module done.')
-        else:
-            self.stitching_retargeting_module = None
+            # init F
+            log("Loading appearance feature extractor...")
+            self.appearance_feature_extractor = load_model(cfg.checkpoint_F, model_config, cfg.device_id, 'appearance_feature_extractor')
+            log("✅ Appearance feature extractor loaded")
+
+            # init M
+            log("Loading motion extractor...")
+            self.motion_extractor = load_model(cfg.checkpoint_M, model_config, cfg.device_id, 'motion_extractor')
+            log("✅ Motion extractor loaded")
+
+            # init W
+            log("Loading warping module...")
+            self.warping_module = load_model(cfg.checkpoint_W, model_config, cfg.device_id, 'warping_module')
+            log("✅ Warping module loaded")
+
+            # init G
+            log("Loading SPADE generator...")
+            self.spade_generator = load_model(cfg.checkpoint_G, model_config, cfg.device_id, 'spade_generator')
+            log("✅ SPADE generator loaded")
+
+            # init S and R
+            if cfg.checkpoint_S is not None and osp.exists(cfg.checkpoint_S):
+                log("Loading stitching retargeting module...")
+                self.stitching_retargeting_module = load_model(cfg.checkpoint_S, model_config, cfg.device_id, 'stitching_retargeting_module')
+                log("✅ Stitching retargeting module loaded")
+            else:
+                log("Skipping stitching retargeting module (not configured)")
+                self.stitching_retargeting_module = None
+        except Exception as e:
+            log(f"🚨 Error during model initialization: {str(e)}")
+            raise
 
         self.cfg = cfg
         self.device_id = cfg.device_id
@@ -70,7 +86,7 @@ class LivePortraitWrapper(object):
             raise ValueError(f'img ndim should be 3 or 4: {x.ndim}')
         x = np.clip(x, 0, 1)  # clip to 0~1
         x = torch.from_numpy(x).permute(0, 3, 1, 2)  # 1xHxWx3 -> 1x3xHxW
-        x = x.cuda(self.device_id)
+        x = x.to(self.device_id)
         return x
 
     def prepare_driving_videos(self, imgs) -> torch.Tensor:
@@ -87,8 +103,7 @@ class LivePortraitWrapper(object):
         y = _imgs.astype(np.float32) / 255.
         y = np.clip(y, 0, 1)  # clip to 0~1
         y = torch.from_numpy(y).permute(0, 4, 3, 1, 2)  # TxHxWx3x1 -> Tx1x3xHxW
-        y = y.cuda(self.device_id)
-
+        y = y.to(self.device_id)
         return y
 
     def extract_feature_3d(self, x: torch.Tensor) -> torch.Tensor:
@@ -96,7 +111,7 @@ class LivePortraitWrapper(object):
         x: Bx3xHxW, normalized to 0~1
         """
         with torch.no_grad():
-            with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=self.cfg.flag_use_half_precision):
+            with torch.autocast(device_type=self.device_id, dtype=torch.float16 if self.cfg.flag_use_half_precision else torch.float32):
                 feature_3d = self.appearance_feature_extractor(x)
 
         return feature_3d.float()
@@ -108,7 +123,7 @@ class LivePortraitWrapper(object):
         return: A dict contains keys: 'pitch', 'yaw', 'roll', 't', 'exp', 'scale', 'kp'
         """
         with torch.no_grad():
-            with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=self.cfg.flag_use_half_precision):
+            with torch.autocast(device_type=self.device_id, dtype=torch.float16 if self.cfg.flag_use_half_precision else torch.float32):
                 kp_info = self.motion_extractor(x)
 
             if self.cfg.flag_use_half_precision:
@@ -254,7 +269,7 @@ class LivePortraitWrapper(object):
         """
         # The line 18 in Algorithm 1: D(W(f_s; x_s, x′_d,i)）
         with torch.no_grad():
-            with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=self.cfg.flag_use_half_precision):
+            with torch.autocast(device_type=self.device_id, dtype=torch.float16 if self.cfg.flag_use_half_precision else torch.float32):
                 # get decoder input
                 ret_dct = self.warping_module(feature_3d, kp_source=kp_source, kp_driving=kp_driving)
                 # decode
