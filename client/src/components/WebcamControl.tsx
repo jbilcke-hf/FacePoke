@@ -27,7 +27,7 @@ export default function WebcamControl({ onLandmarksUpdate, isEnabled = false }: 
           delegate: "GPU"
         },
         outputFaceBlendshapes: true,
-        runningMode: "VIDEO",
+        runningMode: "IMAGE", //"VIDEO",
         numFaces: 1
       });
 
@@ -84,12 +84,13 @@ export default function WebcamControl({ onLandmarksUpdate, isEnabled = false }: 
 
     const processFrame = async () => {
       if (!videoRef.current || !faceLandmarkerRef.current) return;
-
+      console.log("videoRef.current.readyState =", videoRef.current.readyState);
       if (videoRef.current.readyState === 4) {
         const startTimeMs = performance.now();
         const results = faceLandmarkerRef.current.detectForVideo(videoRef.current, startTimeMs);
-
+        console.log("got webcam results", results);
         if (results.faceLandmarks.length > 0) {
+          console.log("got webcam landmarks", results.faceLandmarks);
           onLandmarksUpdate?.(results.faceLandmarks);
         }
       }

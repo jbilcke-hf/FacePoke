@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { FiDownload } from 'react-icons/fi';
 import { PiImageSquare } from 'react-icons/pi';
-
+import WebcamDebugView from '@/components/WebcamDebugView';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { truncateFileName } from './lib/utils';
 import { useFaceLandmarkDetection } from './hooks/useFaceLandmarkDetection';
@@ -30,7 +30,6 @@ export function App() {
   const faceLandmarks = useMainStore(s => s.faceLandmarks);
   const modifyImage = useMainStore(s => s.modifyImage);
 
-  // New state for webcam control
   const [isWebcamMode, setIsWebcamMode] = useState(false);
 
   const {
@@ -52,12 +51,12 @@ export function App() {
   } = useFaceLandmarkDetection()
 
   // Handle webcam landmarks update
-  const handleWebcamLandmarks = useCallback((webcanLandmarks: NormalizedLandmark[][]) => {
-    if (!faceLandmarks.length || !webcanLandmarks.length) return;
+  const handleWebcamLandmarks = useCallback((webcamLandmarks: NormalizedLandmark[][]) => {
+    if (!faceLandmarks.length || !webcamLandmarks.length) return;
 
     const params = LandmarkDifferential.calculateTransformParams({
       source: faceLandmarks,
-      target: webcanLandmarks
+      target: webcamLandmarks
     });
 
     modifyImage({
@@ -240,6 +239,11 @@ export function App() {
         {canDisplayBlendShapes && displayBlendShapes}
       </div>
       <About />
+      <WebcamDebugView
+        isDebugMode={isDebugMode}
+        faceLandmarker={null}
+        onLandmarksUpdate={handleWebcamLandmarks}
+      />
     </Layout>
   );
 }
